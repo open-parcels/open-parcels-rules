@@ -74,7 +74,8 @@ describe("built package", () => {
     });
     expect(run.stdout + run.stderr).toBe("");
     expect(run.status).toBe(0);
-  });
+    // A full tsc run takes well over the default 5 s on a CPU-capped CI container.
+  }, 60_000);
 
   it("packs dist, data and schema, without sources or tests", () => {
     const npmCli =

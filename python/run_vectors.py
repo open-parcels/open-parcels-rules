@@ -31,6 +31,11 @@ def main() -> int:
     vectors = json.loads((dist / "vectors.json").read_text(encoding="utf-8"))
     failures: list[str] = []
     checked = 0
+    # An empty section would pass silently; every one of them must hold vectors.
+    sections = {**vectors, **{f"parity.{k}": v for k, v in vectors.get("parity", {}).items()}}
+    for name in ("tracking", "status", "regex", "parity.names", "parity.detect", "parity.status"):
+        if not sections.get(name):
+            failures.append(f"{name}: no vectors in the bundle")
 
     ids = {}
     for kind in rules.types:
