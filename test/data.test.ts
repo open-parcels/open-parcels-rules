@@ -209,6 +209,7 @@ describe("regex portability", () => {
     expect(portabilityProblems("abc\\Z")).toContain("\\Z anchor");
     expect(portabilityProblems("\\Aabc")).toContain("\\A anchor");
     expect(portabilityProblems("(?i)abc")).toContain("inline flags or unknown group syntax");
+    expect(portabilityProblems("teslİm")).toContain("dotless ı or dotted İ");
     expect(portabilityProblems("(?P<n>a)")).toContain("(?P...) group syntax; write (?<name>...)");
     expect(portabilityProblems("a{,3}")).toContain("{,n} quantifier");
     expect(portabilityProblems("\\u00e4")).toContain("unsupported escape \\u");

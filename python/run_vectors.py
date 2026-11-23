@@ -74,7 +74,7 @@ def main() -> int:
 
     for case in vectors.get("regex", []):
         checked += 1
-        regex = re.compile(to_python_regex(case["pattern"]), _flags(case.get("flags")))
+        regex = re.compile(to_python_regex(case["pattern"], case.get("flags")), _flags(case.get("flags")))
         if (regex.search(case["input"]) is not None) != case["matches"]:
             failures.append(f"regex: {case['pattern']!r} on {case['input']!r} should match: {case['matches']}")
 

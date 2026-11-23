@@ -51,39 +51,112 @@ _OUTSIDE = {
 }
 
 
-def _spell_out_classes(pattern: str) -> str:
-    out: list[str] = []
-    index = 0
-    in_class = False
+# JavaScript (u flag) reads `.` as "not a line terminator", `$` as the very end (or, with m, before
+# any line terminator) and `^` with m as after any of them; Python only knows \n and lets `$`
+# match before a trailing \n. Spelled out, both engines agree.
+_LINE_ENDS = "\\n\\r\\u2028\\u2029"
+# With the i flag Python folds dotless ı and dotted İ onto i/I (and [a-z], \w); JavaScript's
+# `iu` does not. The check is case-sensitive (?-i:...), or it would itself fold onto i.
+_TURKISH_I = "(?-i:[\\u0131\\u0130])"
+
+
+def _atom(cls: str, ignore_case: bool) -> str:
+    """A class (or i/I literal) that, with the i flag, means what JavaScript means."""
+    if not ignore_case:
+        return cls
+    if cls.startswith("[^"):
+        return f"(?:{_TURKISH_I}|{cls})"
+    return f"(?:(?!{_TURKISH_I}){cls})"
+
+
+def _word_boundary(escape: str, ignore_case: bool) -> str:
+    word = _atom(f"[{_WORD}]", ignore_case)
+    if escape == "b":
+        return f"(?:(?<={word})(?!{word})|(?<!{word})(?={word}))"
+    return f"(?:(?<={word})(?={word})|(?<!{word})(?!{word}))"
+
+
+def _read_class(pattern: str, index: int) -> tuple[str, int]:
+    """The class starting at pattern[index] == "[" with its escapes spelled out, and the index after it."""
+    out = ["["]
+    index += 1
+    if pattern[index : index + 1] == "^":
+        out.append("^")
+        index += 1
+    if pattern[index : index + 1] == "]":
+        out.append("]")
+        index += 1
     while index < len(pattern):
         char = pattern[index]
         if char == "\\" and index + 1 < len(pattern):
             escape = pattern[index + 1]
-            if in_class and escape in _IN_CLASS:
-                out.append(_IN_CLASS[escape])
-            elif not in_class and escape in _OUTSIDE:
-                out.append(_OUTSIDE[escape])
+            # \D, \W and \S inside a class are outside the portable subset's use; kept as is.
+            out.append(_IN_CLASS.get(escape, pattern[index : index + 2]))
+            index += 2
+            continue
+        out.append(char)
+        index += 1
+        if char == "]":
+            break
+    return "".join(out), index
+
+
+def _group_open(pattern: str, index: int) -> int:
+    """Length of the group syntax at pattern[index] ("(?:", "(?P<name>", "(?<=", ...)."""
+    rest = pattern[index:]
+    if rest.startswith("(?P<"):
+        return rest.index(">") + 1
+    for opener in ("(?<=", "(?<!", "(?:", "(?=", "(?!"):
+        if rest.startswith(opener):
+            return len(opener)
+    return 1
+
+
+def _translate(pattern: str, flags: list[str]) -> str:
+    ignore_case = "i" in flags
+    multiline = "m" in flags
+    out: list[str] = []
+    index = 0
+    while index < len(pattern):
+        char = pattern[index]
+        if char == "\\" and index + 1 < len(pattern):
+            escape = pattern[index + 1]
+            if escape in ("b", "B"):
+                out.append(_word_boundary(escape, ignore_case))
+            elif escape in _OUTSIDE:
+                out.append(_atom(_OUTSIDE[escape], ignore_case))
             else:
-                # \D, \W and \S inside a class are outside the portable subset's use; kept as is.
                 out.append(pattern[index : index + 2])
             index += 2
             continue
-        if in_class and char == "]":
-            in_class = False
-        elif not in_class and char == "[":
-            in_class = True
-            if pattern[index + 1 : index + 2] == "]":
-                out.append("[]")
-                index += 2
-                continue
-        out.append(char)
+        if char == "[":
+            cls, index = _read_class(pattern, index)
+            out.append(_atom(cls, ignore_case))
+            continue
+        if char == "(":
+            length = _group_open(pattern, index)
+            out.append(pattern[index : index + length])
+            index += length
+            continue
+        if char == "." and "s" not in flags:
+            out.append(f"[^{_LINE_ENDS}]")
+        elif char == "$":
+            out.append(f"(?=[{_LINE_ENDS}]|\\Z)" if multiline else "\\Z")
+        elif char == "^" and multiline:
+            out.append(f"(?<![^{_LINE_ENDS}])")
+        elif char in "iI" and ignore_case:
+            out.append(_atom(char, ignore_case))
+        else:
+            out.append(char)
         index += 1
     return "".join(out)
 
 
-def to_python_regex(pattern: str) -> str:
-    """Rewrites a portable pattern for Python's re: named groups, and class escapes as JS reads them."""
-    return _spell_out_classes(_NAMED_GROUP.sub("(?P<", pattern))
+def to_python_regex(pattern: str, flags: list[str] | None = None) -> str:
+    """Rewrites a portable pattern (with its data flags) for Python's re so it means what the
+    TypeScript engine's `u`-flag regex means: named groups, class escapes, `.`, `^`, `$`, and
+    case-insensitive dotless/dotted i."""
+    return _translate(_NAMED_GROUP.sub("(?P<", pattern), flags or [])
 
 
 def _flags(names: list[str] | None) -> int:
@@ -263,7 +336,7 @@ def _compile_matcher(entries: list[dict[str, Any]]) -> dict[str, Any]:
         elif "code_prefix" in match:
             prefixes.append((_trim(match["code_prefix"]).upper(), entry))
         elif "text" in match:
-            regex = re.compile(to_python_regex(match["text"]), _flags(match.get("flags")))
+            regex = re.compile(to_python_regex(match["text"], match.get("flags")), _flags(match.get("flags")))
             texts.append((regex, _field_pairs(match.get("fields")), entry))
         else:
             fields.append((_field_pairs(match["fields"]), entry))

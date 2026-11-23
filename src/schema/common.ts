@@ -18,7 +18,7 @@ export const parcelStatusSchema = z.enum(PARCEL_STATUSES).meta({
     "a parcel still on its way to a pickup point is in_transit with pickup: true.",
 });
 
-/** Flags a data regex may carry. Each has a direct equivalent in JavaScript, Python re and Go RE2. */
+/** Flags a data regex may carry; ports give each the meaning it has in JavaScript. */
 export const REGEX_FLAGS = ["i", "m", "s"] as const;
 export const regexFlagSchema = z.enum(REGEX_FLAGS);
 

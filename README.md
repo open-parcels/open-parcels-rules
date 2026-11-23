@@ -102,13 +102,18 @@ Details for each data type are in [`docs/contributing.md`](docs/contributing.md)
 
 ### The regex subset
 
-Every regex in our data files must compile to the same meaning in JavaScript (`u` flag),
-Python `re` and Go RE2. A test enforces this:
+Every regex in our data files must mean the same in every engine port. The meaning is that of
+JavaScript with the `u` flag; ports translate where their engine differs (the Python loader
+spells out `\d \w \s \b`, `.` and `^`/`$` as JavaScript reads them, and keeps `i` from folding
+`ı`/`İ` onto `i`; Go RE2's `\s` is ASCII only, so a Go port must do the same).
+[`test/fixtures/regex-vectors.json`](test/fixtures/regex-vectors.json) runs in both engines. A
+test enforces the subset:
 
 - no lookahead or lookbehind, no backreferences, no atomic groups, no possessive quantifiers;
 - no `\A`, `\Z` or `\z` (use `^` and `$`), no `\u` escapes (write the character), no `{,n}`;
 - named groups as `(?<name>...)` (Python ports rewrite them to `(?P<name>...)`);
 - case-insensitivity through a `flags: [i]` field, never inline `(?i)`.
+- no dotless `ı` or dotted `İ` (engines fold them differently).
 
 The vendored upstream files keep their own patterns; the ones outside the subset are listed in
 [`vendor/tracking_number_data/PORTABILITY.md`](vendor/tracking_number_data/PORTABILITY.md).

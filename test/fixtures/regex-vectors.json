@@ -15,6 +15,21 @@
     { "pattern": "^\\S+$", "input": "a b", "matches": false },
     { "pattern": "^\\d+\\s*[A-Z]$", "input": "12٣ A", "matches": false },
     { "pattern": "^empfänger$", "flags": ["i"], "input": "EMPFÄNGER", "matches": true },
-    { "pattern": "^zugestellt$", "flags": ["i"], "input": "ZUGESTELLT", "matches": true }
+    { "pattern": "^zugestellt$", "flags": ["i"], "input": "ZUGESTELLT", "matches": true },
+    { "pattern": "a.b", "input": "a\rb", "matches": false },
+    { "pattern": "a.b", "input": "a\u2028b", "matches": false },
+    { "pattern": "a.b", "flags": ["s"], "input": "a\rb", "matches": true },
+    { "pattern": "^ab$", "input": "ab\n", "matches": false },
+    { "pattern": "^ab$", "input": "ab", "matches": true },
+    { "pattern": "^b$", "flags": ["m"], "input": "a\rb\rc", "matches": true },
+    { "pattern": "^b$", "flags": ["m"], "input": "a\u2028b", "matches": true },
+    { "pattern": "^[a-z]+$", "flags": ["i"], "input": "ı", "matches": false },
+    { "pattern": "^[a-z]+$", "flags": ["i"], "input": "İ", "matches": false },
+    { "pattern": "^teslim$", "flags": ["i"], "input": "TESLİM", "matches": false },
+    { "pattern": "^teslim$", "flags": ["i"], "input": "TESLIM", "matches": true },
+    { "pattern": "^[^a-z]$", "flags": ["i"], "input": "ı", "matches": true },
+    { "pattern": "^\\w+$", "flags": ["i"], "input": "kargoı", "matches": false },
+    { "pattern": "x\\b", "flags": ["i"], "input": "xı", "matches": true },
+    { "pattern": "^[a-z]$", "flags": ["i"], "input": "K", "matches": true }
   ]
 }

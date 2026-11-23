@@ -1,6 +1,8 @@
 /*
- * The regex subset every data file must stay within, so one pattern compiles to the same
- * meaning in JavaScript (u flag), Python `re` and Go RE2.
+ * The regex subset every data file must stay within. Its meaning is that of JavaScript with the
+ * u flag; ports translate what their engine reads differently (the Python loader spells out
+ * \d \w \s \b, `.`, `^`/`$` and case-insensitive i). Go RE2's \s is ASCII only, so a Go port
+ * must spell classes out the same way.
  */
 
 const ALLOWED_ESCAPES = new Set(Array.from("dDwWsSbBnrtfv.\\/^$*+?()[]{}|-"));
@@ -57,6 +59,8 @@ function checkQuantifier(scan: Scan): void {
 /** Returns why `pattern` is outside the portable subset; empty when it is portable. */
 export function portabilityProblems(pattern: string): string[] {
   const scan: Scan = { pattern, problems: [], index: 0, inClass: false };
+  // Case folding of dotless ı and dotted İ differs between engines; keep them out of patterns.
+  if (/[\u0130\u0131]/u.test(pattern)) scan.problems.push("dotless ı or dotted İ");
   while (scan.index < pattern.length) {
     const char = pattern[scan.index];
     if (char === "\\") {
