@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -96,6 +97,27 @@ def main() -> int:
         status = None if mapped is None else mapped["status"]
         if status != case["status"]:
             failures.append(f"parity status/{case['carrier']}: {raw} gave {status}, expected {case['status']}")
+
+    # Long whitespace runs and number-like padding used to take minutes (RU-001); each scan must
+    # stay well under a second, and still find a number after the padding.
+    number = "00340434123456789012"
+    budgets = {
+        "spaces": " " * 100_000,
+        "unicode spaces": "\u2000\u3000\t \v\f\u00a0\ufeff" * 12_500,
+        # Every window of these is a real candidate to check-digit, so this one measures linear
+        # work in an interpreter; smaller than the whitespace inputs.
+        "digit pairs": "1 " * 10_000,
+        "number after spaces": " " * 100_000 + number,
+    }
+    for name, text in budgets.items():
+        checked += 1
+        began = time.perf_counter()
+        numbers = {hit["tracking_number"] for hit in detect_tracking_numbers(rules, text)}
+        took = time.perf_counter() - began
+        if took > 1.0:
+            failures.append(f"detect budget/{name}: took {took:.2f} s")
+        if name == "number after spaces" and number not in numbers:
+            failures.append(f"detect budget/{name}: {number} not found")
 
     for failure in failures:
         print(f"FAIL {failure}")

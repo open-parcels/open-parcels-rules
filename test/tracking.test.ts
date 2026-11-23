@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { detectTrackingNumbers } from "../src/index.ts";
 import { verifyChecksum } from "../src/tracking/checksums.ts";
-import { carrierOf } from "../src/tracking/detect.ts";
+import { carrierOf, MAX_LINE, scanLines } from "../src/tracking/detect.ts";
+import { withoutEdgeSpaces } from "../src/tracking/compile.ts";
 import { matchType } from "../src/tracking/validate.ts";
 import { testRules } from "./helpers/rules.ts";
 
@@ -149,5 +150,38 @@ describe("detectTrackingNumbers", () => {
     const values = found.map((c) => c.confidence);
     expect(values.every((v) => v > 0 && v < 1)).toBe(true);
     expect([...values].sort((a, b) => b - a)).toEqual(values);
+  });
+});
+
+describe("detection on hostile text (RU-001)", () => {
+  const number = "00340434123456789012";
+  const inputs: [string, string][] = [
+    ["100k spaces", " ".repeat(100_000)],
+    ["mixed Unicode whitespace", "\u2000\u3000\t \v\f\u00a0\ufeff".repeat(12_500)],
+    ["digit pairs", "1 ".repeat(50_000)],
+    ["14-digit table", "12345678901234 ".repeat(6_000)],
+  ];
+
+  it.each(inputs)("scans %s well under a second", (_name, text) => {
+    const began = performance.now();
+    detectTrackingNumbers(rules, text);
+    expect(performance.now() - began).toBeLessThan(1000);
+  });
+
+  it("still finds a number after a long whitespace run", () => {
+    const found = detectTrackingNumbers(rules, `${" ".repeat(100_000)}Paket ${number}`);
+    expect(found.map((c) => c.trackingNumber)).toContain(number);
+  });
+
+  it("collapses whitespace runs and cuts overlong lines at a space", () => {
+    expect(scanLines("a \u3000\t b\r\nc")).toEqual(["a b", "c"]);
+    const pieces = scanLines(`${"x".repeat(MAX_LINE - 1)} ${number}`);
+    expect(pieces).toEqual(["x".repeat(MAX_LINE - 1), ` ${number}`]);
+  });
+
+  it("strips only the optional whitespace edges of a search pattern", () => {
+    expect(withoutEdgeSpaces("\\s*1\\s*Z\\s*")).toBe("1\\s*Z");
+    expect(withoutEdgeSpaces("\\s*?1")).toBe("\\s*?1");
+    expect(withoutEdgeSpaces("1\\\\s*")).toBe("1\\\\s*");
   });
 });

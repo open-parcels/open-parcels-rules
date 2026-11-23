@@ -286,6 +286,36 @@ def _no_spaces(value: str) -> str:
     return _JS_WHITESPACE.sub("", value)
 
 
+def _without_edge_spaces(pattern: str) -> str:
+    """The pattern without leading and trailing \\s*, as the TypeScript engine scans with: the
+    optional edges change no match, and a leading \\s* backtracked through whitespace runs."""
+    result = pattern
+    while result.startswith("\\s*") and result[3:4] not in ("?", "+", "{"):
+        result = result[3:]
+    while result.endswith("\\s*") and not result.endswith("\\\\s*"):
+        result = result[:-3]
+    return result
+
+
+# Longest line scanned in one piece, as in the TypeScript engine.
+MAX_LINE = 4096
+
+
+def scan_lines(text: str) -> list[str]:
+    """Lines split only at \\n and \\r\\n, whitespace runs collapsed to one space and overlong
+    lines cut at a space before MAX_LINE, exactly as the TypeScript engine's scanLines."""
+    pieces: list[str] = []
+    for raw in re.split(r"\r?\n", text):
+        line = _JS_WHITESPACE.sub(" ", raw)
+        while len(line) > MAX_LINE:
+            space = line.rfind(" ", 0, MAX_LINE + 1)
+            cut = space if space > 0 else MAX_LINE
+            pieces.append(line[:cut])
+            line = line[cut:]
+        pieces.append(line)
+    return pieces
+
+
 def load_rules(path: str | Path = DEFAULT_BUNDLE) -> Rules:
     bundle = json.loads(Path(path).read_text(encoding="utf-8"))
     types = []
@@ -293,7 +323,9 @@ def load_rules(path: str | Path = DEFAULT_BUNDLE) -> Rules:
         courier = source["courier"]
         for spec in courier["tracking_numbers"]:
             raw = spec["regex"]
-            pattern = to_python_regex("".join(raw) if isinstance(raw, list) else raw)
+            joined = "".join(raw) if isinstance(raw, list) else raw
+            pattern = to_python_regex(joined)
+            scan = to_python_regex(_without_edge_spaces(joined))
             types.append(
                 TrackingType(
                     courier_code=courier["courier_code"],
@@ -301,7 +333,7 @@ def load_rules(path: str | Path = DEFAULT_BUNDLE) -> Rules:
                     name=spec["name"],
                     spec=spec,
                     exact=re.compile(f"(?:{pattern})", re.ASCII),
-                    search=re.compile(f"(?<![A-Za-z0-9])(?:{pattern})(?![A-Za-z0-9])", re.ASCII),
+                    search=re.compile(f"(?<![A-Za-z0-9])(?:{scan})(?![A-Za-z0-9])", re.ASCII),
                 )
             )
     courier_carriers: dict[str, str] = {}
@@ -458,27 +490,32 @@ def _scan_line(rules: Rules, line: str, index: int) -> list[_Hit]:
 
 
 def _drop_contained(hits: list[_Hit]) -> list[_Hit]:
-    """Drops hits lying inside a longer valid hit on the same line (14 digits inside 20)."""
-    return [
-        hit
-        for hit in hits
-        if not any(
-            other is not hit
-            and other.result["valid"]
-            and other.line == hit.line
-            and other.start <= hit.start
-            and other.end >= hit.end
-            and other.end - other.start > hit.end - hit.start
-            for other in hits
-        )
-    ]
+    """Drops hits lying inside a longer valid hit on the same line (14 digits inside 20).
+    Sorted by start and swept per line, as the TypeScript engine does."""
+    by_line: dict[int, list[_Hit]] = {}
+    for hit in hits:
+        by_line.setdefault(hit.line, []).append(hit)
+    dropped: set[int] = set()
+    for line in by_line.values():
+        ordered = sorted(line, key=lambda hit: hit.start)
+        end_before = -1
+        index = 0
+        while index < len(ordered):
+            start = ordered[index].start
+            group = []
+            while index < len(ordered) and ordered[index].start == start:
+                group.append(ordered[index])
+                index += 1
+            end_here = max([-1, *(hit.end for hit in group if hit.result["valid"])])
+            dropped.update(id(hit) for hit in group if end_before >= hit.end or end_here > hit.end)
+            end_before = max(end_before, end_here)
+    return [hit for hit in hits if id(hit) not in dropped]
 
 
 def detect_tracking_numbers(rules: Rules, text: str) -> list[dict[str, Any]]:
     """Every valid number in the text with its carrier and format ids (no confidence model)."""
     found: dict[tuple[str, str], dict[str, Any]] = {}
-    # Lines split as the TypeScript engine splits them: only at \n and \r\n.
-    hits = [hit for index, line in enumerate(re.split(r"\r?\n", text)) for hit in _scan_line(rules, line, index)]
+    hits = [hit for index, line in enumerate(scan_lines(text)) for hit in _scan_line(rules, line, index)]
     for hit in _drop_contained(hits):
         if not hit.result["valid"]:
             continue

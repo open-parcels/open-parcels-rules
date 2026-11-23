@@ -56,20 +56,40 @@ function scanLine(context: Context, line: string, lineIndex: number): Hit[] {
   return hits;
 }
 
-/** Drops hits lying strictly inside a longer valid hit (a 14-digit run inside a 20-digit one). */
+function containedInLine(line: readonly Hit[], dropped: Set<Hit>): void {
+  const sorted = [...line].sort((a, b) => a.start - b.start);
+  // Furthest end of a valid hit starting strictly before the current start.
+  let endBefore = -1;
+  let index = 0;
+  while (index < sorted.length) {
+    const start = sorted[index]?.start;
+    const group: Hit[] = [];
+    for (let hit = sorted[index]; hit !== undefined && hit.start === start; hit = sorted[index]) {
+      group.push(hit);
+      index += 1;
+    }
+    const endHere = Math.max(-1, ...group.filter((h) => h.match.valid).map((h) => h.end));
+    for (const hit of group) {
+      if (endBefore >= hit.end || endHere > hit.end) dropped.add(hit);
+    }
+    endBefore = Math.max(endBefore, endHere);
+  }
+}
+
+/**
+ * Drops hits lying strictly inside a longer valid hit on the same line (a 14-digit run inside a
+ * 20-digit one). Sorted by start and swept per line, so long tables of numbers stay cheap.
+ */
 function dropContained(hits: readonly Hit[]): Hit[] {
-  return hits.filter(
-    (hit) =>
-      !hits.some(
-        (other) =>
-          other !== hit &&
-          other.match.valid &&
-          other.line === hit.line &&
-          other.start <= hit.start &&
-          other.end >= hit.end &&
-          other.end - other.start > hit.end - hit.start,
-      ),
-  );
+  const byLine = new Map<number, Hit[]>();
+  for (const hit of hits) {
+    const line = byLine.get(hit.line);
+    if (line === undefined) byLine.set(hit.line, [hit]);
+    else line.push(hit);
+  }
+  const dropped = new Set<Hit>();
+  for (const line of byLine.values()) containedInLine(line, dropped);
+  return hits.filter((hit) => !dropped.has(hit));
 }
 
 interface Scored {
@@ -156,12 +176,35 @@ function finalScores(context: Context, scored: Scored[], hints: DetectHints): Tr
     }));
 }
 
+/** Longest line scanned in one piece; longer ones are cut at a space before this length. */
+export const MAX_LINE = 4096;
+
+/**
+ * The lines detection scans: whitespace runs collapsed to one space (the formats tolerate any
+ * amount of it, and long runs made the scan super-linear) and overlong lines cut into pieces.
+ * The Python loader splits text the same way.
+ */
+export function scanLines(text: string): string[] {
+  return text.split(/\r?\n/u).flatMap((raw) => {
+    let line = raw.replace(/\s+/gu, " ");
+    const pieces: string[] = [];
+    while (line.length > MAX_LINE) {
+      const space = line.lastIndexOf(" ", MAX_LINE);
+      const cut = space > 0 ? space : MAX_LINE;
+      pieces.push(line.slice(0, cut));
+      line = line.slice(cut);
+    }
+    pieces.push(line);
+    return pieces;
+  });
+}
+
 export function detect(
   context: Context,
   text: string,
   hints: DetectHints = {},
 ): TrackingCandidate[] {
-  const hits = text.split(/\r?\n/u).flatMap((line, index) => scanLine(context, line, index));
+  const hits = scanLines(text).flatMap((line, index) => scanLine(context, line, index));
   return finalScores(context, mergeHits(context, dropContained(hits), hints), hints);
 }
 

@@ -32,6 +32,18 @@ function joinedRegex(spec: TrackingNumberType): string {
   return Array.isArray(spec.regex) ? spec.regex.join("") : spec.regex;
 }
 
+/**
+ * The pattern without leading and trailing `\s*`: optional edges change no match, and a leading
+ * `\s*` after the look-behind backtracked through every whitespace run (quadratic). The Python
+ * loader strips the same edges.
+ */
+export function withoutEdgeSpaces(pattern: string): string {
+  let result = pattern;
+  while (result.startsWith("\\s*") && !/^[?+{]/u.test(result.slice(3))) result = result.slice(3);
+  while (result.endsWith("\\s*") && !result.endsWith("\\\\s*")) result = result.slice(0, -3);
+  return result;
+}
+
 function slug(text: string): string {
   return text
     .toLowerCase()
@@ -84,7 +96,10 @@ export function compileTrackingTypes(sources: readonly TrackingSource[]): Compil
         origin: source.origin,
         spec,
         exact: new RegExp(`^(?:${pattern})$`, "u"),
-        search: new RegExp(`(?<![A-Za-z0-9])(?:${pattern})(?![A-Za-z0-9])`, "gu"),
+        search: new RegExp(
+          `(?<![A-Za-z0-9])(?:${withoutEdgeSpaces(pattern)})(?![A-Za-z0-9])`,
+          "gu",
+        ),
         prependIf:
           prepend === undefined
             ? null
