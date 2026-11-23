@@ -121,4 +121,5 @@ after a schema change.
 
 ## Licence
 
-Not decided yet. The vendored community data keeps its own MIT licence.
+Released into the public domain under [the Unlicense](LICENSE). The vendored community data in
+`vendor/tracking_number_data/` keeps its own MIT licence.
