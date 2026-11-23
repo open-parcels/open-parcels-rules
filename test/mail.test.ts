@@ -5,7 +5,9 @@ import { ROOT } from "../scripts/collect.ts";
 import { parseMail } from "../src/index.ts";
 import { isBoilerplateItem, isPlaceholder } from "../src/mail/context.ts";
 import { EXTRACTORS } from "../src/mail/extractors.ts";
-import { senderAddress } from "../src/mail/parse.ts";
+import { decodeEntities, htmlToText } from "../src/mail/html.ts";
+import { httpUrl, senderAddress } from "../src/mail/parse.ts";
+import { extractSchemaOrg } from "../src/mail/schema-org.ts";
 import type { MailInput } from "../src/types.ts";
 import { parseEml } from "./helpers/eml.ts";
 import { testData, testRules } from "./helpers/rules.ts";
@@ -200,5 +202,97 @@ describe("parseMail beyond the rules", () => {
     });
     expect(results[0]?.arrival).toBeUndefined();
     expect(results[0]?.trackingNumbers).toEqual(["00340434123456789012"]);
+  });
+});
+
+/** Runs `work` and fails when it takes longer than `budget` milliseconds. */
+function withinBudget(work: () => unknown, budget = 1000): void {
+  const began = performance.now();
+  work();
+  expect(performance.now() - began).toBeLessThan(budget);
+}
+
+function jsonLdMail(from: string, delivery: Record<string, unknown>): MailInput {
+  const json = JSON.stringify({ "@context": "https://schema.org", ...delivery });
+  return {
+    from,
+    subject: "Your order",
+    html: `<html><head><script type="application/ld+json">${json}</script></head></html>`,
+  };
+}
+
+describe("hostile mail (RU-002 to RU-005)", () => {
+  it("decodes out-of-range character references to U+FFFD instead of throwing", () => {
+    expect(decodeEntities("a&#x110000;b&#99999999;c&#0;d&#xD800;e&#x41;")).toBe(
+      "a\uFFFDb\uFFFDc\uFFFDd\uFFFDeA",
+    );
+    expect(htmlToText("<p>Hi &#x110000;</p>")).toBe("Hi \uFFFD");
+    expect(() =>
+      parseMail(rules, { from: "a@example.com", subject: "x", html: "&#x110000;" }),
+    ).not.toThrow();
+  });
+
+  it("survives deeply nested JSON-LD", () => {
+    const html = `ParcelDelivery<script type="application/ld+json">${"[".repeat(20_000)}${"]".repeat(20_000)}</script>`;
+    expect(extractSchemaOrg(html)).toEqual([]);
+    const deep = `{"name":`.repeat(5_000) + `"x"` + "}".repeat(5_000);
+    const nested = `ParcelDelivery<script type="application/ld+json">{"@type":"ParcelDelivery","carrier":${deep}}</script>`;
+    expect(() => extractSchemaOrg(nested)).not.toThrow();
+    expect(() =>
+      parseMail(rules, { from: "notices@yodel.co.uk", subject: "x", html: nested }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    ["unclosed comments", "<!--".repeat(40_000)],
+    ["unclosed anchors", "<a ".repeat(40_000)],
+    ["anchors without end tag", '<a href="x">'.repeat(40_000)],
+    ["unclosed styles", "<style>".repeat(40_000)],
+    ["lone angle brackets", "<".repeat(200_000)],
+    ["unclosed ld+json scripts", '<script type="application/ld+json">'.repeat(40_000)],
+  ])("reads HTML with %s in linear time", (_name, junk) => {
+    const html = `ParcelDelivery ${junk}`;
+    withinBudget(() => htmlToText(html));
+    withinBudget(() => extractSchemaOrg(html));
+  });
+
+  it("keeps the plain-text conversion of ordinary HTML", () => {
+    expect(
+      htmlToText(
+        "<html><head><title>T</title><style>p{}</style></head><body><!-- c --><p>Hello&nbsp; <b>you</b></p>" +
+          '<a href="https://example.com/t">Track</a><br/>a &lt; b<table><tr><td>1</td><td>2</td></tr></table></body></html>',
+      ),
+    ).toBe("Hello you\nTrack <https://example.com/t>\na < b\n\n1 2");
+  });
+
+  it("accepts only http(s) tracking URLs", () => {
+    expect(httpUrl("https://example.com/track")).toBe("https://example.com/track");
+    expect(httpUrl("http://example.com/track")).toBe("http://example.com/track");
+    expect(httpUrl("javascript:alert(1)")).toBeUndefined();
+    expect(httpUrl("data:text/html,x")).toBeUndefined();
+    expect(httpUrl("not a url")).toBeUndefined();
+  });
+
+  const delivery = {
+    "@type": "ParcelDelivery",
+    trackingNumber: "00340434123456789012",
+    trackingUrl: "javascript:alert(1)",
+    deliveryStatus: "OrderDelivered",
+  };
+
+  it("ignores schema.org markup from senders the rules do not know", () => {
+    expect(parseMail(rules, jsonLdMail("spam@example.com", delivery))).toEqual([]);
+  });
+
+  it("drops non-http tracking URLs and placeholder numbers from schema.org markup", () => {
+    const [result] = parseMail(rules, jsonLdMail("notices@yodel.co.uk", delivery));
+    expect(result).toMatchObject({
+      ruleId: "schema.org",
+      trackingNumbers: ["00340434123456789012"],
+    });
+    expect(result?.trackingUrl).toBeUndefined();
+    const placeholder = { ...delivery, trackingNumber: "0000000000" };
+    const [empty] = parseMail(rules, jsonLdMail("notices@yodel.co.uk", placeholder));
+    expect(empty?.trackingNumbers).toEqual([]);
   });
 });

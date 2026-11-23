@@ -7,7 +7,13 @@ import { detect } from "../tracking/detect.ts";
 import { normalizeTrackingNumber } from "../tracking/validate.ts";
 import type { ArrivalWindow, MailInput, MailParseResult } from "../types.ts";
 import type { CompiledMailRule, CompiledPattern } from "./compile.ts";
-import { isBoilerplateItem, isKnownSender, trustedCandidates } from "./context.ts";
+import {
+  fitsCarrierPattern,
+  isBoilerplateItem,
+  isKnownSender,
+  isPlaceholder,
+  trustedCandidates,
+} from "./context.ts";
 import { EXTRACTORS } from "./extractors.ts";
 import { htmlToText } from "./html.ts";
 import { extractSchemaOrg } from "./schema-org.ts";
@@ -24,6 +30,13 @@ interface Prepared {
 /** Confidence a number found by the fallback needs; below it the mail is left alone. */
 const FALLBACK_THRESHOLD = 0.6;
 const TRAILING_URL_PUNCTUATION = /[.,;:!)\]>]+$/u;
+
+/** The URL when it is http(s); `javascript:`, `data:` and the like are dropped. */
+export function httpUrl(url: string | undefined): string | undefined {
+  if (url === undefined || !URL.canParse(url)) return undefined;
+  const { protocol } = new URL(url);
+  return protocol === "https:" || protocol === "http:" ? url : undefined;
+}
 
 export function senderAddress(from: string): string {
   const bracketed = /<([^<>\s]+@[^<>\s]+)>/u.exec(from)?.[1];
@@ -151,9 +164,8 @@ function applyRule(
   const orders = new Set(orderNumbers.map(normalizeTrackingNumber));
   draft.trackingNumbers = draft.trackingNumbers.filter((number) => !orders.has(number));
   const items = collectField(rule, "item", sources).filter((item) => !isBoilerplateItem(item));
-  const trackingUrl = collectField(rule, "tracking_url", sources)[0]?.replace(
-    TRAILING_URL_PUNCTUATION,
-    "",
+  const trackingUrl = httpUrl(
+    collectField(rule, "tracking_url", sources)[0]?.replace(TRAILING_URL_PUNCTUATION, ""),
   );
   const pickupCode = collectField(rule, "pickup_code", sources)[0];
   const arrival = arrivalFrom(rules, collectField(rule, "arrival", sources), prepared.mail);
@@ -189,12 +201,29 @@ function applyRule(
   };
 }
 
+/** Whether a schema.org number may become a parcel: no placeholder, and the carrier's shape. */
+function plausibleNumber(rules: Rules, number: string, carrier: string | undefined): boolean {
+  if (isPlaceholder(number)) return false;
+  if (carrier === undefined) return true;
+  const candidate = {
+    carrier,
+    trackingNumber: number,
+    confidence: 1,
+    checksumValid: null,
+    types: [],
+  };
+  return fitsCarrierPattern(rules, candidate);
+}
+
 function schemaOrgResults(rules: Rules, prepared: Prepared): MailParseResult[] {
+  // Like the fallback, only carriers and shops the rules know may announce a parcel by markup.
+  if (!isKnownSender(rules, prepared.domain)) return [];
   return extractSchemaOrg(prepared.mail.html).map((delivery) => {
     const carrier =
       delivery.carrierName === undefined
         ? undefined
         : lookupCarrier(rules.carriers, delivery.carrierName)?.id;
+    const trackingUrl = httpUrl(delivery.trackingUrl);
     const arrival =
       delivery.expectedUntil === undefined
         ? undefined
@@ -202,13 +231,15 @@ function schemaOrgResults(rules: Rules, prepared: Prepared): MailParseResult[] {
     return {
       ruleId: "schema.org",
       kind: "parcel" as const,
-      trackingNumbers: delivery.trackingNumbers.map(normalizeTrackingNumber),
+      trackingNumbers: delivery.trackingNumbers
+        .map(normalizeTrackingNumber)
+        .filter((number) => plausibleNumber(rules, number, carrier)),
       orderNumbers: delivery.orderNumbers,
       ...(carrier === undefined ? {} : { carrier }),
       ...(delivery.status === undefined ? {} : { status: delivery.status }),
       ...(arrival === undefined ? {} : { arrival }),
       ...(delivery.items.length === 0 ? {} : { items: delivery.items }),
-      ...(delivery.trackingUrl === undefined ? {} : { trackingUrl: delivery.trackingUrl }),
+      ...(trackingUrl === undefined ? {} : { trackingUrl }),
     };
   });
 }
