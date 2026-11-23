@@ -173,6 +173,12 @@ describe("resolveStatus", () => {
     });
   });
 
+  it("skips history entries mapped to unknown (the latest event repeated)", () => {
+    expect(
+      resolveStatus(rules, "dhl", { code: "unknown" }, [{ code: "unknown" }, { code: "transit" }]),
+    ).toEqual({ status: "in_transit", source: "history", unmapped: null });
+  });
+
   it("ends at unknown when nothing maps", () => {
     expect(resolveStatus(rules, "gls", { text: "???" }, [{ text: "!!!" }])).toEqual({
       status: "unknown",

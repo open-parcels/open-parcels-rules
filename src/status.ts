@@ -145,7 +145,10 @@ export function resolveWithTable(
   if (table !== undefined) {
     for (const event of history) {
       const mapped = mapWithTable(table, event);
-      if (mapped !== null) return { status: mapped.status, source: "history", unmapped };
+      // An entry mapped to unknown carries no information either (often the latest repeated).
+      if (mapped !== null && mapped.status !== "unknown") {
+        return { status: mapped.status, source: "history", unmapped };
+      }
     }
   }
   return { status: "unknown", source: "unknown", unmapped };
