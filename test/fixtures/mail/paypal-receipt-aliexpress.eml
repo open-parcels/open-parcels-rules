@@ -1,0 +1,18 @@
+From: PayPal <service@paypal.de>
+To: erika.mustermann@example.com
+Subject: Receipt for Your Payment to AliExpress
+Date: Wed, 04 Nov 2026 16:25:00 +0100
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Erika Mustermann, you successfully sent a payment.</p>
+<p>You paid 11,47 € EUR to AliExpress</p>
+<p>Merchant</p>
+<p>AliExpress</p>
+<p>Order ID</p>
+<p>2026110485031300001234567890123</p>
+<p>USB-C Charging Cable 1 m...</p>
+<p>Qty: 2</p>
+<p>Product ID: 1005000000000001</p>
+</body></html>

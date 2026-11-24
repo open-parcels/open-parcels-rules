@@ -1,0 +1,19 @@
+From: PayPal <service@paypal.de>
+To: erika.mustermann@example.com
+Subject: Receipt for Your Payment to Humble Bundle, Inc.
+Date: Sun, 15 Nov 2026 20:00:00 +0100
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Erika Mustermann, you successfully sent a payment.</p>
+<p>You sent a payment of €13.99 EUR to Humble Bundle, Inc.</p>
+<p>Transaction ID</p>
+<p>9ZY87654XW3210987</p>
+<p>Merchant</p>
+<p>Humble Bundle, Inc.</p>
+<p>Description</p>
+<p>Example Puzzle Game (transaction id: QWERTY2345ABC)</p>
+<p>Total</p>
+<p>€13.99 EUR</p>
+</body></html>

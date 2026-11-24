@@ -1,0 +1,28 @@
+From: "service@paypal.de" <service@paypal.de>
+To: erika.mustermann@example.com
+Subject: Receipt for Your Payment to Valve Corporation
+Date: Sat, 14 Nov 2026 16:07:30 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+14. Nov 2026 16:07:30 GMT+01:00 | Transaction ID: 1AB23456CD7890123
+
+Hello Erika Mustermann,
+
+You have sent a payment of €13,99 EUR to Valve Corporation.
+
+Merchant:
+Valve Corporation
+
+-----------------------------------
+Purchase Details
+-----------------------------------
+
+Description: Order #712345678901234567
+Unit price: 13,99 EUR
+Qty: 1
+Amount: 13,99 EUR
+
+Total: 13,99 EUR
+
+Invoice ID: 712345678901234567

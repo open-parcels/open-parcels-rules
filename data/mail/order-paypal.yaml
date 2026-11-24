@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-paypal
+name: PayPal payment receipts that name the shop's order
+kind: order
+senders:
+  domains: [paypal.com, paypal.de, paypal.co.uk, paypal.pl, paypal.it, paypal.fr]
+  local_parts: [service]
+subject:
+  - "receipt for your payment to|zahlungsbeleg|ihre zahlung an|you sent a payment|you paid"
+extract:
+  # Only references the shop issued (invoice, order, the shop's own transaction id), so the
+  # receipt joins the shop's order emails instead of counting the purchase twice; PayPal's own
+  # transaction id is never taken. A reference needs a digit (so a following label is never
+  # taken) and digit runs longer than 29 are skipped: AliExpress receipts quote a 31-digit
+  # Alipay id, not the 16-digit order number.
+  order_number:
+    - pattern: '(?:invoice id|order id|rechnungsnummer|rechnungs-id)\s*:?\s*(?<order_number>[A-Za-z_-]{0,10}\d[A-Za-z0-9_-]{1,28})\b'
+    - pattern: 'order #(?<order_number>\d{6,20})\b'
+    - pattern: '\(transaction id:\s*(?<order_number>[A-Z0-9]{8,20})\)'
+event_keywords:
+  - event: order_placed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: paypal-receipt-steam.eml
+    expect:
+      - ruleId: order-paypal
+        kind: order
+        event: order_placed
+        orderNumbers: ["712345678901234567"]
+  - fixture: paypal-receipt-humble.eml
+    expect:
+      - ruleId: order-paypal
+        event: order_placed
+        orderNumbers: ["QWERTY2345ABC"]
+  - fixture: paypal-receipt-aliexpress.eml
+    expect: []
