@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: parcel-mindfactory
+name: Mindfactory shipping notices
+kind: parcel
+senders:
+  addresses: [info@mindfactory.de]
+subject:
+  - "versandmitteilung"
+carrier: dhl
+carrier_from: carrier
+extractors: [detect_tracking_numbers]
+extract:
+  tracking_number:
+    - pattern: 'sendungsverfolgungsnummer:\s*(?<tracking_number>[A-Z0-9]{8,30})\b'
+  carrier:
+    - pattern: 'versandart:\s*(?<carrier>DHL|DPD|GLS|UPS|Hermes)\b'
+  order_number:
+    - pattern: 'bestellung\s*(?<order_number>\d{6,9})\b'
+  item:
+    - pattern: '^\d{4,8} (?<item>[^\n]{2,120}?) \d+ [\d.,]+ € [\d.,]+ €[ \t]*$'
+      flags: [i, m]
+default_status: in_transit
+require: [tracking_number]
+tests:
+  - fixture: mindfactory-shipped.eml
+    expect:
+      - ruleId: order-mindfactory
+        event: order_shipped
+        orderNumbers: ["1234567"]
+        items: ["EXAMPLE Mainboard ATX DDR4", "EXAMPLE CPU 6x 2.90GHz BOX"]
+      - ruleId: parcel-mindfactory
+        kind: parcel
+        carrier: dhl
+        trackingNumbers: ["340011223348"]
+        orderNumbers: ["1234567"]
+        status: in_transit

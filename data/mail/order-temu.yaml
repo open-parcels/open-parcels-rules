@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-temu
+name: Temu order confirmations and order updates
+kind: order
+senders:
+  addresses: [temu@orders.temu.com]
+subject:
+  - "order|bestellung|paket"
+extract:
+  order_number:
+    # The plain part is a stub; the HTML part carries the details.
+    - pattern: '#?(?<order_number>\bPO-\d{3}-\d{14,20})\b'
+      in: [subject, html]
+event_keywords:
+  - event: order_cancelled
+    patterns: ["cancell?ed|storniert"]
+    in: [subject]
+  - event: order_delivered
+    patterns: ["delivered|zugestellt"]
+    in: [subject]
+  - event: order_shipped
+    patterns: ["shipped|transferred to|out-for-delivery|out for delivery|versandt|unterwegs"]
+    in: [subject]
+  - event: order_confirmed
+    patterns: ["confirm|bestätig"]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: temu-order-confirmation.eml
+    expect:
+      - ruleId: order-temu
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["PO-076-01234567890123456"]

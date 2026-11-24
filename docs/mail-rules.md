@@ -83,9 +83,9 @@ Every number found by format detection (the fallback and `detect_tracking_number
 
 - sit in a tracking context: a tracking keyword from the locale tables on its line or the line
   above, a parcel noun ("Sendung", "shipment", "paczka") on its line, or a tracking link
-  around it. Inside a link it counts only as a whole query value or path segment of a
-  tracking link (`?piececode=<n>`, `/track/<n>`); a number that only appears inside other
-  links, or inside a longer token such as `id_202601191820_1`, is not evidence;
+  around it. Inside a link it counts only as a whole query value or path segment
+  (`?piececode=<n>`, `/track/<n>`), never as part of a longer token such as the campaign
+  timestamp in `id_202601191820_1`;
 - fit the carrier's `tracking_number_pattern` where `carriers.yaml` gives one;
 - not be a placeholder: one character repeated, or only 0s and 9s (optionally followed by one
   check digit).

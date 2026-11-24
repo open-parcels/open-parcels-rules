@@ -1,0 +1,16 @@
+From: MediaMarkt Onlineshop <no_reply@mediamarkt.de>
+To: erika.mustermann@example.com
+Subject: Bestätigung - Bestellung 123456789
+Date: Mon, 09 Nov 2026 10:00:00 +0100
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Vielen Dank für Ihre Bestellung bei MediaMarkt</p>
+<p>Guten Tag Erika Mustermann,</p>
+<p>vielen Dank für Ihre Bestellung 123456789 bei MediaMarkt!</p>
+<p>Bestellübersicht</p>
+<p>Menge: Artikelnummer: Lieferung / Abholung: Bezeichnung: Einzelpreis: Summe:</p>
+<p>1 1234567 Online auf Lager - Lieferung in 1-2 Werktagen EXAMPLE microSD-Karte 128 GB 19,99 EUR 19,99 EUR</p>
+<p>Rechnungssumme 19,99 EUR</p>
+</body></html>

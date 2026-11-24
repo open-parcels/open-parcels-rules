@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: parcel-rasppishop
+name: Rasppishop shipping notices
+kind: parcel
+senders:
+  addresses: [bestellung@rasppishop.de, noreply@rasppishop.de]
+subject:
+  - "wurde versandt"
+carrier: dhl
+extractors: [detect_tracking_numbers]
+extract:
+  tracking_number:
+    - pattern: '[?&](?:idc|piececode)=(?<tracking_number>[A-Z0-9]{10,30})\b'
+      in: [text, html]
+  order_number:
+    - pattern: 'bestellnummer\s+(?<order_number>RS\d{4,8})\b'
+default_status: in_transit
+require: [tracking_number]
+tests:
+  - fixture: rasppishop-shipped.eml
+    expect:
+      - ruleId: order-rasppishop
+        event: order_shipped
+        orderNumbers: ["RS12345"]
+      - ruleId: parcel-rasppishop
+        kind: parcel
+        carrier: dhl
+        trackingNumbers: ["00340434123456789012"]
+        orderNumbers: ["RS12345"]

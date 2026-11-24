@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-netto-online
+name: Netto Online-Shop order confirmations and shipping notices
+kind: order
+senders:
+  addresses: [shopnoreply@netto-online.de]
+subject:
+  - "bestelleingangsbestätigung|versandbestätigung|stornierung|ihre rechnung"
+extract:
+  order_number:
+    - pattern: '(?:bestellnummer:|auftrag)\s*(?<order_number>\d{9})\b'
+  item:
+    # "1,00   2674946000         EXAMPLE TABLET"
+    - pattern: '^\d+,\d\d\s+\d{6,12}\s+(?<item>[^\s][^\n]{1,119}?)[ \t]*$'
+      flags: [i, m]
+event_keywords:
+  - event: order_cancelled
+    patterns: ["stornierung"]
+    in: [subject]
+  - event: order_shipped
+    patterns: ["versandbestätigung"]
+    in: [subject]
+  - event: order_confirmed
+    patterns: ["bestelleingangsbestätigung"]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: netto-online-shipped.eml
+    expect:
+      - ruleId: order-netto-online
+        kind: order
+        event: order_shipped
+        orderNumbers: ["012345678"]
+        items: ["EXAMPLE Tablet 10 LTE"]
+      - ruleId: parcel-netto-online
+        carrier: dpd
+        trackingNumbers: ["01505012345678"]
+        orderNumbers: ["012345678"]

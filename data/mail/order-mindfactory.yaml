@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-mindfactory
+name: Mindfactory order confirmations and shipping notices
+kind: order
+senders:
+  addresses: [info@mindfactory.de]
+subject:
+  - "bestellbestätigung|versandmitteilung|stornierung"
+extract:
+  order_number:
+    - pattern: '(?:bestellbestätigung|vorgangsnummer:|bestellung)\s*(?<order_number>\d{6,9})\b'
+  item:
+    # "8974815 EXAMPLE NAME 1 127,61 € 127,61 €"
+    - pattern: '^\d{4,8} (?<item>[^\n]{2,120}?) \d+ [\d.,]+ € [\d.,]+ €[ \t]*$'
+      flags: [i, m]
+event_keywords:
+  - event: order_cancelled
+    patterns: ["stornierung"]
+    in: [subject]
+  - event: order_shipped
+    patterns: ["versandmitteilung"]
+    in: [subject]
+  - event: order_confirmed
+    patterns: ["bestellbestätigung"]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: mindfactory-order.eml
+    expect:
+      - ruleId: order-mindfactory
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["1234567"]

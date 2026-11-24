@@ -1,0 +1,22 @@
+From: Temu <temu@orders.temu.com>
+To: erika.mustermann@example.com
+Subject: Your Temu order confirmation (#PO-076-01234567890123456)
+Date: Wed, 11 Nov 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset=utf-8
+
+To properly view the full message content, please open this email in a high version mail client or browser.
+
+--b1
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Hi Erika, thank you for shopping with us! We have received and confirmed your order.</p>
+<p>Your order is confirmed! We're getting your order ready for shipping.</p>
+<p>Delivery: 5-10 business days (Nov 16-21)</p>
+<p>Order ID: PO-076-01234567890123456</p>
+</body></html>
+--b1--

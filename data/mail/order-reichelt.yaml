@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-reichelt
+name: reichelt elektronik order confirmations and shipping notices
+kind: order
+senders:
+  addresses: [bestellinfo@reichelt.de, versandinfo@reichelt.de]
+subject:
+  - "your order|ihre bestellung"
+extract:
+  order_number:
+    # The I-Net number ties the confirmation (I-212100) to the shipping notice (212100).
+    - pattern: '(?:processing number I-|I-Net[- ]Nummer\s*|I-Net number[^:\n]*:\s*|bearbeitungsnummer I-)(?<order_number>\d{5,8})\b'
+  item:
+    - pattern: '^(?<item>[A-Z0-9][^\t\n:]{1,60}?)[ \t]{2,}\d+[ \t]*$'
+      flags: [m]
+      in: [text]
+event_keywords:
+  - event: order_shipped
+    patterns: ["handed over to|übergeben"]
+    in: [text]
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: reichelt-order.eml
+    expect:
+      - ruleId: order-reichelt
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["123456"]

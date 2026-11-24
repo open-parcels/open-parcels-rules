@@ -1,0 +1,20 @@
+From: Versandinfo reichelt elektronik <versandinfo@reichelt.de>
+To: erika.mustermann@example.com
+Subject: Ihre Bestellung vom 10.11.2026
+Date: Tue, 10 Nov 2026 15:30:00 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+	Dear Customer,
+Your order with invoice number 7000001 (I-Net-Nummer 123456)	was handed over to  DHL at 15:21 today.
+The shipment number is  00340434987654321012.
+Your order number: PV-00000000001
+Number of packets: 1
+
+Summary of your order:
+
+Item number		Quantity
+RASP PI 5 B 8GB 				1
+EXAMPLE CASE BK				1
+
+Value of order=99.90EUR

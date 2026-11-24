@@ -1,0 +1,18 @@
+From: Mindfactory AG <info@mindfactory.de>
+To: erika.mustermann@example.com
+Subject: Versandmitteilung (inkl. Rechnung): Ihre Bestellung vom 09.11.2026 ist unterwegs!
+Date: Wed, 11 Nov 2026 16:00:00 +0100
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Hallo Erika Mustermann,</p>
+<p>wir haben Ihre Bestellung 1234567 versandt.</p>
+<p>Die Sendung umfasst 1 Paket(e). Sie können sie unter folgendem Link verfolgen:</p>
+<p>Sendungsverfolgungsnummer: <a href="https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode=340011223348">340011223348</a></p>
+<p>Diese Lieferung umfasst:</p>
+<p>ARTNR ARTIKEL ANZAHL EINZELPREIS PREIS</p>
+<p>8900001 EXAMPLE Mainboard ATX DDR4 1 127,61 € 127,61 €</p>
+<p>8900002 EXAMPLE CPU 6x 2.90GHz BOX 1 135,00 € 135,00 €</p>
+<p>Summe: 262,61 €</p>
+</body></html>

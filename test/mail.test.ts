@@ -168,16 +168,25 @@ describe("parseMail beyond the rules", () => {
     expect(result?.trackingNumbers).toEqual(["00340434123456789012"]);
   });
 
-  it("ignores numbers that are only part of a link token", () => {
+  it("ignores numbers that are only part of a longer link token", () => {
     const results = parseMail(rules, {
       from: "info@dhl.com",
       subject: "Track your shipment",
       text:
         "Track your shipment\n" +
         "<https://www.dhl.de/track?campaign=id_00340434123456789012_1>\n" +
-        "Shipment <https://www.example.com/news?ref=00340434123456789012>\n",
+        "Shipment <https://www.example.com/news?ref=x00340434123456789012$a>\n",
     });
     expect(results).toEqual([]);
+  });
+
+  it("accepts a whole link value next to a tracking word", () => {
+    const [result] = parseMail(rules, {
+      from: "info@dhl.com",
+      subject: "Shipment update",
+      text: "Tracking number: http://nolp.dhl.de/nextt-online-public/set_identcodes.do?idc=00340434123456789012\n",
+    });
+    expect(result?.trackingNumbers).toEqual(["00340434123456789012"]);
   });
 
   it("rejects placeholder numbers", () => {

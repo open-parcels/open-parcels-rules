@@ -1,0 +1,21 @@
+From: Temu <temu@orders.temu.com>
+To: erika.mustermann@example.com
+Subject: Order shipped and DHL Paket tracking number is ready (Order ID: #PO-076-01234567890123456)
+Date: Fri, 13 Nov 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset=utf-8
+
+To properly view the full message content, please open this email in a high version mail client or browser.
+
+--b1
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Hi Erika, your order has been shipped and the tracking number is ready. The DHL Paket tracking number is 00340434123456789012. You can track your order below.</p>
+<p><a href="https://app.temu.com/cmsg_transit.html?_cmsg_biz=2001">Track your order</a></p>
+<p>Order ID: PO-076-01234567890123456</p>
+</body></html>
+--b1--

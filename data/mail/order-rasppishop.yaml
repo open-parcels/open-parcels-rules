@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-rasppishop
+name: Rasppishop order confirmations and shipping notices
+kind: order
+senders:
+  addresses: [bestellung@rasppishop.de, noreply@rasppishop.de]
+subject:
+  - "ihre bestellung bei rasppishop"
+extract:
+  order_number:
+    - pattern: 'bestellnummer\s+(?<order_number>RS\d{4,8})\b'
+  item:
+    # "1x Raspberry Pi 4 Modell B 4GB SDRAM - 58,99 EUR"; shipping lines start in lower case.
+    - pattern: '^[ \t]*(?:\* )?\d+x (?<item>[A-Z0-9][^\n]{1,119}?) - [\d.,]+ EUR[ \t]*$'
+      flags: [m]
+      in: [text]
+event_keywords:
+  - event: order_cancelled
+    patterns: ["storniert"]
+    in: [subject]
+  - event: order_shipped
+    patterns: ["versandt"]
+    in: [subject]
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: rasppishop-order.eml
+    expect:
+      - ruleId: order-rasppishop
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["RS12345"]
+        items: ["Raspberry Pi 5 8GB", "Raspberry Pi 27W USB-C Netzteil"]

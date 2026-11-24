@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: parcel-netto-online
+name: Netto Online-Shop shipping notices
+kind: parcel
+senders:
+  addresses: [shopnoreply@netto-online.de]
+subject:
+  - "versandbestätigung"
+carrier_from: carrier
+extractors: [detect_tracking_numbers]
+extract:
+  # Tracking links of the carrier that took the parcel (DPD, DHL, Hermes, GLS).
+  tracking_number:
+    - pattern: 'tracking\.dpd\.de/status/[a-z_]+/parcel/(?<tracking_number>\d{14})\b'
+      in: [text, html]
+    - pattern: '[?&](?:piececode|idc)=(?<tracking_number>[A-Z0-9]{10,30})\b'
+      in: [text, html]
+  carrier:
+    - pattern: 'https?://(?:[a-z]+\.)?(?:my)?(?<carrier>dpd|dhl|hermes|gls)[.-]'
+      in: [text, html]
+  order_number:
+    - pattern: '(?:bestellnummer:|auftrag)\s*(?<order_number>\d{9})\b'
+  item:
+    - pattern: '^\d+,\d\d\s+\d{6,12}\s+(?<item>[^\s][^\n]{1,119}?)[ \t]*$'
+      flags: [i, m]
+default_status: in_transit
+require: [tracking_number]
+tests:
+  - fixture: netto-online-shipped.eml
+    expect:
+      - ruleId: order-netto-online
+      - ruleId: parcel-netto-online
+        kind: parcel
+        carrier: dpd
+        trackingNumbers: ["01505012345678"]
+        status: in_transit

@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: parcel-temu
+name: Temu shipping notifications
+kind: parcel
+senders:
+  addresses: [temu@orders.temu.com]
+subject:
+  - "tracking number|shipped|transferred to|out-for-delivery|delivered"
+carrier_from: carrier
+extract:
+  tracking_number:
+    - pattern: 'tracking number is (?<tracking_number>[A-Z0-9]{8,30})\b'
+      in: [html]
+  carrier:
+    - pattern: '(?:the|to) (?<carrier>DHL|Deutsche Post|Hermes|DPD|GLS|UPS)\b'
+      in: [subject, html]
+  order_number:
+    - pattern: '#?(?<order_number>\bPO-\d{3}-\d{14,20})\b'
+      in: [subject, html]
+status_keywords:
+  - status: delivered
+    patterns: ["delivered"]
+    in: [subject]
+  - status: out_for_delivery
+    patterns: ["out-for-delivery|out for delivery"]
+    in: [subject]
+default_status: in_transit
+require: [tracking_number]
+tests:
+  - fixture: temu-shipped.eml
+    expect:
+      - ruleId: order-temu
+        event: order_shipped
+        orderNumbers: ["PO-076-01234567890123456"]
+      - ruleId: parcel-temu
+        kind: parcel
+        carrier: dhl
+        trackingNumbers: ["00340434123456789012"]
+        orderNumbers: ["PO-076-01234567890123456"]
+        status: in_transit

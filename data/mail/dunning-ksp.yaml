@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: dunning-ksp
+name: KSP Rechtsanwälte collection letters for PayPal
+kind: dunning
+senders:
+  # KSP collects for several clients; only the PayPal desk's address is known so far.
+  addresses: [kontaktpaypal@ksp.de]
+subject:
+  - "forderung|mahnung|gegen sie"
+event_keywords:
+  - event: debt_collection
+    patterns: ["."]
+    in: [subject]
+tests:
+  - fixture: ksp-mahnung.eml
+    expect:
+      - ruleId: dunning-ksp
+        kind: dunning
+        event: debt_collection
+        orderNumbers: []

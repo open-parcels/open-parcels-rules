@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: parcel-reichelt
+name: reichelt elektronik shipping notices
+kind: parcel
+senders:
+  addresses: [versandinfo@reichelt.de]
+carrier_from: carrier
+extract:
+  tracking_number:
+    - pattern: '(?:shipment number is|sendungsnummer (?:lautet|ist))\s*(?<tracking_number>[A-Z0-9]{8,30})\b'
+  carrier:
+    - pattern: '(?:handed over to|übergeben an)\s+(?<carrier>DHL|DPD|GLS|UPS|Hermes|Deutsche Post)\b'
+  order_number:
+    - pattern: 'I-Net[- ]Nummer\s*(?<order_number>\d{5,8})\b'
+  item:
+    - pattern: '^(?<item>[A-Z0-9][^\t\n:]{1,60}?)[ \t]{2,}\d+[ \t]*$'
+      flags: [m]
+      in: [text]
+default_status: in_transit
+require: [tracking_number]
+tests:
+  - fixture: reichelt-shipped.eml
+    expect:
+      - ruleId: order-reichelt
+        event: order_shipped
+        orderNumbers: ["123456"]
+      - ruleId: parcel-reichelt
+        kind: parcel
+        carrier: dhl
+        trackingNumbers: ["00340434987654321012"]
+        orderNumbers: ["123456"]
+        items: ["RASP PI 5 B 8GB", "EXAMPLE CASE BK"]
