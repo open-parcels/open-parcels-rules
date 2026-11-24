@@ -26,6 +26,7 @@ export interface CompiledMailRule {
   readonly defaultStatus: ParcelStatus | undefined;
   readonly carrier: string | undefined;
   readonly carrierFrom: boolean;
+  readonly currency: string | undefined;
   readonly extractors: readonly string[];
   readonly require: readonly MailField[];
 }
@@ -84,6 +85,7 @@ export function compileMailRule(rule: Omit<MailRule, "tests">): CompiledMailRule
     defaultStatus: rule.default_status,
     carrier: rule.carrier,
     carrierFrom: rule.carrier_from !== undefined,
+    currency: rule.currency,
     extractors: rule.extractors,
     require: rule.require,
   };

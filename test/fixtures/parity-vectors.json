@@ -25,5 +25,20 @@
       "input": { "text": "﻿Early Bird has received your package", "fields": { "use": "status" } },
       "status": "in_transit"
     }
+  ],
+  "money": [
+    { "text": "€ 11,47", "total": { "amount": 11.47, "currency": "EUR" } },
+    { "text": "1.234,50 EUR", "total": { "amount": 1234.5, "currency": "EUR" } },
+    { "text": "99.90EUR", "total": { "amount": 99.9, "currency": "EUR" } },
+    { "text": "€13.99 EUR", "total": { "amount": 13.99, "currency": "EUR" } },
+    { "text": "1\u00a0234 zł", "total": { "amount": 1234, "currency": "PLN" } },
+    { "text": "$1,234", "total": { "amount": 1234, "currency": "USD" } },
+    { "text": "$12.00", "currency": "AUD", "total": { "amount": 12, "currency": "AUD" } },
+    { "text": "£5", "total": { "amount": 5, "currency": "GBP" } },
+    { "text": "CHF 1'250.95", "total": { "amount": 1250.95, "currency": "CHF" } },
+    { "text": "12,99", "total": null },
+    { "text": "12,99", "currency": "EUR", "total": { "amount": 12.99, "currency": "EUR" } },
+    { "text": "EUR", "total": null },
+    { "text": "٣٤ EUR", "total": null }
   ]
 }

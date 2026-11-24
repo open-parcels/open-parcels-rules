@@ -104,6 +104,12 @@ export interface MailInput {
   readonly timeZone?: string;
 }
 
+/** An amount of money with its ISO 4217 currency code. */
+export interface Money {
+  readonly amount: number;
+  readonly currency: string;
+}
+
 export interface MailParseResult {
   /** Mail rule id, "schema.org" for embedded ParcelDelivery data, or "fallback". */
   readonly ruleId: string;
@@ -122,4 +128,6 @@ export interface MailParseResult {
    * the recipient, but never write it to logs.
    */
   readonly pickupCode?: string;
+  /** What the order costs in total, as the email states it. */
+  readonly total?: Money;
 }

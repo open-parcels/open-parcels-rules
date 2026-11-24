@@ -25,6 +25,7 @@ export { loadRules } from "./load.ts";
 export { rulesFromBundle } from "./rules.ts";
 export { portabilityProblems } from "./portability.ts";
 export { PARCEL_STATUSES } from "./schema/common.ts";
+export { parseMoney } from "./mail/money.ts";
 export type { Rules } from "./rules.ts";
 export type * from "./types.ts";
 

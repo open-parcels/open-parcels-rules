@@ -25,6 +25,7 @@ __all__ = [
     "detect_tracking_numbers",
     "map_status",
     "ignored_status",
+    "parse_money",
 ]
 
 DEFAULT_BUNDLE = Path(__file__).resolve().parents[2] / "dist" / "bundle.json"
@@ -566,3 +567,45 @@ def ignored_status(
 
 def _table(rules: Rules, carrier: str) -> dict[str, Any] | None:
     return rules.status.get(rules.carrier_names.get(_normalize_name(carrier), carrier))
+
+
+# Port of src/mail/money.ts: an amount of money as an email writes it. Character classes are
+# spelled out (no \d) so non-ASCII digits never count, as with the TypeScript engine.
+_MONEY_CODES = re.compile(r"(?<![A-Z])(EUR|USD|GBP|PLN|CHF|CZK|SEK|DKK|NOK|HUF|AUD|CAD|CNY|JPY)(?![A-Z])")
+_MONEY_SYMBOLS = (("\u20ac", "EUR"), ("\u00a3", "GBP"), ("z\u0142", "PLN"), ("K\u010d", "CZK"))
+_MONEY_NUMBER = re.compile("[0-9](?:[0-9.,' \u00a0\u202f]*[0-9])?")
+_MONEY_GROUPING = re.compile("[' \u00a0\u202f]")
+
+
+def _money_currency(text: str, fallback: str | None) -> str | None:
+    code = _MONEY_CODES.search(text)
+    if code is not None:
+        return code.group(1)
+    for sign, symbol_code in _MONEY_SYMBOLS:
+        if sign in text:
+            return symbol_code
+    if "$" in text:
+        return fallback or "USD"
+    return fallback
+
+
+def _money_amount(text: str) -> float | None:
+    found = _MONEY_NUMBER.search(text)
+    if found is None:
+        return None
+    digits = _MONEY_GROUPING.sub("", found.group(0))
+    last = max(digits.rfind("."), digits.rfind(","))
+    decimals = "" if last < 0 else digits[last + 1 :]
+    whole = digits[:last] if 0 < len(decimals) <= 2 else digits
+    fraction = "" if whole == digits else decimals
+    integer = whole.replace(".", "").replace(",", "")
+    if not re.fullmatch("[0-9]+", integer):
+        return None
+    return float(f"{integer}.{fraction}" if fraction else integer)
+
+
+def parse_money(text: str, currency: str | None = None) -> dict[str, Any] | None:
+    """The amount and ISO 4217 currency in text as {amount, currency}, or None."""
+    amount = _money_amount(text)
+    code = _money_currency(text, currency)
+    return None if amount is None or code is None else {"amount": amount, "currency": code}

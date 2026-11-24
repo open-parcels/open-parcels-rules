@@ -1209,7 +1209,8 @@
                 "pickup_code",
                 "item",
                 "arrival",
-                "carrier"
+                "carrier",
+                "total"
               ]
             },
             "additionalProperties": {
@@ -1442,7 +1443,7 @@
             "description": "Canonical parcel status. at_pickup_point means arrived and waiting for collection; a parcel still on its way to a pickup point is in_transit with pickup: true."
           },
           "carrier": {
-            "description": "The carrier when the mail names none (see carrier_from).",
+            "description": "The carrier when the email names none (see carrier_from).",
             "type": "string",
             "pattern": "^[a-z0-9][a-z0-9_-]*$"
           },
@@ -1450,6 +1451,11 @@
             "description": "Take the carrier from the extracted carrier field, normalised via carriers.yaml aliases; falls back to `carrier`.",
             "type": "string",
             "const": "carrier"
+          },
+          "currency": {
+            "description": "ISO 4217 code for a total whose text names no currency (or only $, which is USD otherwise).",
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
           },
           "extractors": {
             "default": [],
@@ -1472,7 +1478,8 @@
                 "pickup_code",
                 "item",
                 "arrival",
-                "carrier"
+                "carrier",
+                "total"
               ]
             }
           }

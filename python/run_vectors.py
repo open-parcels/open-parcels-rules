@@ -21,6 +21,7 @@ from open_parcels_rules import (  # noqa: E402
     ignored_status,
     load_rules,
     map_status,
+    parse_money,
     to_python_regex,
     validate_tracking_number,
 )
@@ -34,7 +35,7 @@ def main() -> int:
     checked = 0
     # An empty section would pass silently; every one of them must hold vectors.
     sections = {**vectors, **{f"parity.{k}": v for k, v in vectors.get("parity", {}).items()}}
-    for name in ("tracking", "status", "regex", "parity.names", "parity.detect", "parity.status"):
+    for name in ("tracking", "status", "regex", "parity.names", "parity.detect", "parity.status", "parity.money"):
         if not sections.get(name):
             failures.append(f"{name}: no vectors in the bundle")
 
@@ -97,6 +98,12 @@ def main() -> int:
         status = None if mapped is None else mapped["status"]
         if status != case["status"]:
             failures.append(f"parity status/{case['carrier']}: {raw} gave {status}, expected {case['status']}")
+
+    for case in parity.get("money", []):
+        checked += 1
+        money = parse_money(case["text"], case.get("currency"))
+        if money != case["total"]:
+            failures.append(f"money: {case['text']!r} gave {money}, expected {case['total']}")
 
     # Long whitespace runs and number-like padding used to take minutes (RU-001); each scan must
     # stay well under a second, and still find a number after the padding.

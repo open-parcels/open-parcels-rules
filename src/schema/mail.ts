@@ -33,6 +33,7 @@ export const MAIL_FIELDS = [
   "item",
   "arrival",
   "carrier",
+  "total",
 ] as const;
 export const mailFieldSchema = z.enum(MAIL_FIELDS);
 
@@ -108,13 +109,22 @@ export const mailRuleSchema = z.strictObject({
   event_keywords: z.array(eventKeywordSchema).default([]),
   default_status: parcelStatusSchema.optional(),
   carrier: identifierSchema.optional().meta({
-    description: "The carrier when the mail names none (see carrier_from).",
+    description: "The carrier when the email names none (see carrier_from).",
   }),
   carrier_from: z.literal("carrier").optional().meta({
     description:
       "Take the carrier from the extracted carrier field, normalised via carriers.yaml " +
       "aliases; falls back to `carrier`.",
   }),
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/u)
+    .optional()
+    .meta({
+      description:
+        "ISO 4217 code for a total whose text names no currency (or only $, which is USD " +
+        "otherwise).",
+    }),
   extractors: z.array(z.string()).default([]).meta({
     description: "Named code extractors (src/mail/extractors) for what a regex cannot express.",
   }),

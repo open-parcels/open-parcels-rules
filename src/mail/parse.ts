@@ -16,6 +16,7 @@ import {
 } from "./context.ts";
 import { EXTRACTORS } from "./extractors.ts";
 import { htmlToText } from "./html.ts";
+import { parseMoney } from "./money.ts";
 import { extractSchemaOrg } from "./schema-org.ts";
 
 type Parts = Readonly<Record<MailPart, string>>;
@@ -166,6 +167,9 @@ function applyRule(
     collectField(rule, "tracking_url", parts)[0]?.replace(TRAILING_URL_PUNCTUATION, ""),
   );
   const pickupCode = collectField(rule, "pickup_code", parts)[0];
+  const total = collectField(rule, "total", parts)
+    .map((text) => parseMoney(text, rule.currency))
+    .find((money) => money !== undefined);
   const arrival = arrivalFrom(rules, collectField(rule, "arrival", parts), prepared.mail);
   const status =
     rule.statusKeywords.find((group) => anyMatch(group.patterns, parts))?.status ??
@@ -179,6 +183,7 @@ function applyRule(
     item: items.length > 0,
     arrival: arrival !== undefined,
     carrier: draft.carrier !== undefined,
+    total: total !== undefined,
   };
   if (!rule.require.every((field) => present[field])) return null;
   const anything =
@@ -196,6 +201,7 @@ function applyRule(
     ...(items.length === 0 ? {} : { items }),
     ...(trackingUrl === undefined ? {} : { trackingUrl }),
     ...(pickupCode === undefined ? {} : { pickupCode }),
+    ...(total === undefined ? {} : { total }),
   };
 }
 

@@ -18,6 +18,7 @@ body: ['\bDPD\b']                 # optional: one must match the text (relays su
 flags: [i]                        # default flags for bare-string patterns (default: [i])
 carrier: dhl                      # default carrier
 carrier_from: carrier             # read the carrier from the `carrier` field first
+currency: EUR                     # optional: for a total that names no currency
 extractors: [detect_tracking_numbers]
 extract:
   tracking_number: [{ pattern: '...(?<tracking_number>...)...', in: [subject, text] }]
@@ -27,6 +28,7 @@ extract:
   item:            [{ pattern: '^\s*[•*]\s*(?<item>[^\n]+)$', flags: [i, m] }]
   arrival:         [{ pattern: '(?<arrival>(?:zustellung|arriving)[^\n]{0,80})' }]
   carrier:         [{ pattern: 'versand mit (?<carrier>DHL|Hermes)' }]
+  total:           [{ pattern: 'gesamtsumme:\s*(?<total>\d[\d.,]*\s?(?:€|EUR))' }]
 status_keywords:                  # first group with a matching pattern wins
   - { status: delivered, patterns: ['wurde zugestellt'] }
 event_keywords:                   # order, return and dunning events
@@ -48,6 +50,12 @@ tests:
   and a number that also appears as an order number is dropped.
 - `arrival` texts are parsed with all locales against the email's `Date`; a timed window wins
   over a whole day. Without an email date there is no arrival.
+- `total` is what the whole order costs, read from the first match that gives an amount and a
+  currency: `{ amount: 24.99, currency: "EUR" }`. The currency is an ISO 4217 code written in
+  the text (`EUR`, `USD`, ...) or a sign (`€`, `£`, `zł`, `Kč`; `$` is USD); when the text has
+  neither, the rule's `currency` is used, and without one there is no total. The last `.` or
+  `,` followed by one or two digits is the decimal point, every other separator groups
+  thousands. Capture the total, not a subtotal or an item price.
 - Events: `order_placed`, `order_confirmed`, `order_shipped`, `order_delivered` (the shop
   says the order arrived, without a tracking number), `order_cancelled`,
   `return_started`, `return_received`, `refund_issued`, `return_rejected`,

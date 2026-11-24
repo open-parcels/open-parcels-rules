@@ -57,6 +57,7 @@ import type { Rules, ParcelStatus, CarrierInfo, TrackingCandidate } from "open-p
 | `resolveStatus(rules, carrier, latest, history)` | `{ status, source, unmapped }`; see below. |
 | `parseArrival(rules, text, { now, timeZone, locales? })` | `{ from, to, allDay, matched }` or `null`. |
 | `parseMail(rules, mail)` | An array of `MailParseResult`. |
+| `parseMoney(text, currency?)` | `{ amount, currency }` from a money text such as `€ 11,47` or `99.90EUR`, or `undefined`. |
 
 Additions to the contract: `rulesFromBundle`, `portabilityProblems(pattern)` (the regex-subset
 check, for tools that edit data), `PARCEL_STATUSES`, the `types` field on tracking
@@ -100,7 +101,8 @@ parseMail(rules, {
 ```
 
 Each result has `ruleId`, `kind`, `trackingNumbers`, `orderNumbers` and, when found,
-`carrier`, `status`, `event`, `arrival`, `items`, `trackingUrl` and `pickupCode`.
+`carrier`, `status`, `event`, `arrival`, `items`, `trackingUrl`, `pickupCode` and `total`
+(`{ amount, currency }`, what the order costs; `parseMoney(text, currency?)` reads one).
 
 **`pickupCode` is a secret**: it opens a locker or proves identity at a counter. Show it to
 the recipient, store it like a credential, and never write it to logs, metrics or error
@@ -110,5 +112,5 @@ reports.
 
 `python/open_parcels_rules` reads `dist/bundle.json` with the standard library only and offers
 `load_rules`, `validate_tracking_number`, `detect_tracking_numbers` (no confidence model),
-`map_status` and `ignored_status`. `python -I python/run_vectors.py` runs the tracking and status vectors from
+`map_status`, `ignored_status` and `parse_money`. `python -I python/run_vectors.py` runs the tracking and status vectors from
 `dist/vectors.json`. Arrival parsing and email rules are TypeScript only for now.

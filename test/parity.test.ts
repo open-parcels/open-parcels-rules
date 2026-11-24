@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROOT } from "../scripts/collect.ts";
-import { detectTrackingNumbers, findCarrier, mapStatus } from "../src/index.ts";
-import type { RawStatus } from "../src/types.ts";
+import { detectTrackingNumbers, findCarrier, mapStatus, parseMoney } from "../src/index.ts";
+import type { Money, RawStatus } from "../src/types.ts";
 import { testRules } from "./helpers/rules.ts";
 
 /*
@@ -14,6 +14,7 @@ interface Parity {
   names: { name: string; carrier: string }[];
   detect: { text: string; numbers: string[] }[];
   status: { carrier: string; input: RawStatus; status: string | null }[];
+  money: { text: string; currency?: string; total: Money | null }[];
 }
 
 const parity = JSON.parse(
@@ -33,5 +34,9 @@ describe("parity vectors", () => {
 
   it.each(parity.status)("maps $input for $carrier", ({ carrier, input, status }) => {
     expect(mapStatus(rules, carrier, input)?.status ?? null).toBe(status);
+  });
+
+  it.each(parity.money)("reads $text as $total", ({ text, currency, total }) => {
+    expect(parseMoney(text, currency) ?? null).toEqual(total);
   });
 });
