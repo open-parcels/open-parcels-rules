@@ -1,21 +1,36 @@
 # yaml-language-server: $schema=../../schema/mail-rule.schema.json
 id: order-ebay
-name: eBay purchase confirmations
+name: eBay purchase confirmations and order updates
 kind: order
 senders:
   domains: [ebay.com, ebay.de, ebay.co.uk, ebay.ca, ebay.it, ebay.com.au, ebay.pl, ebay.fr, ebay.at]
   local_parts: [ebay]
 subject:
-  - "order confirmed|bestätigung ihres kaufs|bestellung bestätigt|your ebay order|kupione|vielen dank für ihren kauf|storniert|cancell?ed"
+  - "order confirmed|bestätigung ihres kaufs|bestellung bestätigt|your ebay order|your order is confirmed|kupione|vielen dank für ihren kauf|storniert|cancell?ed"
+  - "order update|update zur bestellung|beim versanddienstleister|your package is now with|order delivered|bestellung zugestellt|wurde versandt|was delivered|item shipped"
+exclude:
+  - "rückgabe|rücksendung|return|rückerstattung|refund"
 extract:
   order_number:
     - pattern: '\b(?<order_number>\d{2}-\d{5}-\d{5})\b'
   item:
     - pattern: '(?:artikel|item):\s*(?<item>[^\n]{3,80})'
       in: [text]
+    # The name above its links and "Artikelnr.:" / "Preis:"; a price line ("EUR 278,90",
+    # "US $12.00") above "Artikelnr.:" is not a name.
+    - pattern: '^(?<item>(?:[^\s<\dEU€$£]|E[^U\n]|EU[^R\n]|U[^S\n]|US[^ \n])[^\n<:]{1,118}?)[ \t]*(?:(?:[ \t]*\n){1,3}<[^\n>]*>[ \t]*){0,3}(?:[ \t]*\n){1,3}(?:artikelnr\.|item number|preis|price):'
+      flags: [i, m]
+      in: [text]
 event_keywords:
   - event: order_cancelled
     patterns: ["storniert|cancell?ed"]
+    in: [subject]
+  - event: order_delivered
+    patterns: ["delivered|zugestellt"]
+    in: [subject]
+  - event: order_shipped
+    patterns:
+      ["order update|update zur bestellung|versanddienstleister|is now with|versandt|shipped"]
     in: [subject]
   - event: order_confirmed
     patterns: ["."]
@@ -29,3 +44,14 @@ tests:
         event: order_confirmed
         orderNumbers: ["12-34567-89012"]
         items: ["Retro-Kofferradio, gebraucht"]
+  - fixture: ebay-de-order-update.eml
+    expect:
+      - ruleId: order-ebay
+        event: order_shipped
+        orderNumbers: ["12-34567-89012"]
+        items: ["Retro-Kofferradio, gebraucht"]
+      - ruleId: parcel-ebay
+        carrier: dhl
+        trackingNumbers: ["00340434123456789012"]
+        orderNumbers: ["12-34567-89012"]
+        status: in_transit

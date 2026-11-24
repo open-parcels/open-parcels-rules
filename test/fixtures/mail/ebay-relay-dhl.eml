@@ -1,0 +1,14 @@
+From: "eBay - example_seller" <0a1b2c3d4e5f60718293@members.ebay.com>
+To: erika.mustermann@example.com
+Subject: Ihre example_seller Sendung kommt heute
+Date: Fri, 20 Nov 2026 07:00:00 +0100
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Wichtige Informationen zu Ihrer Sendung</p>
+<p>Hallo,</p>
+<p>Ihre example_seller Sendung kommt heute zwischen 10:00 und 13:00 Uhr.</p>
+<p><a href="https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode=00340434123456789012">Sendung verfolgen</a></p>
+<p>Ihr DHL Team</p>
+</body></html>

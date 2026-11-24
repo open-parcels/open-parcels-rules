@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: return-ebay
+name: eBay returns and refunds
+kind: return
+senders:
+  domains: [ebay.com, ebay.de, ebay.co.uk, ebay.ca, ebay.it, ebay.com.au, ebay.pl, ebay.fr, ebay.at]
+  local_parts: [ebay]
+subject:
+  - "rückgabe|rücksendung|return|rückerstattung|refund"
+exclude:
+  - "nachricht|message"
+extract:
+  order_number:
+    - pattern: '\b(?<order_number>\d{2}-\d{5}-\d{5})\b'
+  item:
+    - pattern: '^(?<item>[^\s<][^\n<:]{2,119}?)[ \t]*(?:[ \t]*\n){1,3}(?:bestellnummer|order number):'
+      flags: [i, m]
+      in: [text]
+event_keywords:
+  - event: refund_issued
+    patterns: ["rückerstattung (?:eingeleitet|veranlasst)|refund (?:issued|sent|started)"]
+    in: [subject]
+  - event: return_received
+    patterns: ["artikel erhalten|received (?:the|your) (?:item|return)"]
+    in: [subject]
+  - event: return_started
+    patterns: ["angefragt|akzeptiert|verschickt|requested|accepted|shipped"]
+    in: [subject]
+tests:
+  - fixture: ebay-de-refund.eml
+    expect:
+      - ruleId: return-ebay
+        kind: return
+        event: refund_issued
+        orderNumbers: ["12-34567-89012"]
+        items: ["Retro-Kofferradio, gebraucht"]

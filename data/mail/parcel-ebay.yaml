@@ -6,10 +6,13 @@ senders:
   domains: [ebay.com, ebay.de, ebay.co.uk, ebay.ca, ebay.it, ebay.com.au, ebay.pl, ebay.fr, ebay.at]
   local_parts: [ebay, member, notification]
 subject:
-  - "shipped|versandt|verschickt|dispatched|tracking|on its way|unterwegs|delivered|zugestellt|angekommen"
+  - "shipped|versandt|verschickt|dispatched|tracking|on its way|unterwegs|delivered|zugestellt|angekommen|order update|update zur bestellung|versanddienstleister|is now with"
 carrier_from: carrier
 extractors: [detect_tracking_numbers]
 extract:
+  # The HTML layout puts the label and the number in separate blocks (blank lines between).
+  tracking_number:
+    - pattern: '(?:sendungsnummer|trackingnummer|tracking number)\s*:?\s*(?<tracking_number>[A-Z0-9]{8,30})\b'
   carrier:
     - pattern: '(?:versand mit|versandservice|versanddienstleister|carrier|shipped with|shipping service|via)\s*:?\s*(?<carrier>DHL|Deutsche Post|Hermes|DPD|GLS|UPS|FedEx|Royal Mail|USPS|Evri|Canada Post|Australia Post)\b'
   order_number:
@@ -17,14 +20,24 @@ extract:
   item:
     - pattern: '(?:artikel|item):\s*(?<item>[^\n]{3,80})'
       in: [text]
+    # The name above its links and "Artikelnr.:" / "Preis:"; a price line ("EUR 278,90",
+    # "US $12.00") above "Artikelnr.:" is not a name.
+    - pattern: '^(?<item>(?:[^\s<\dEU€$£]|E[^U\n]|EU[^R\n]|U[^S\n]|US[^ \n])[^\n<:]{1,118}?)[ \t]*(?:(?:[ \t]*\n){1,3}<[^\n>]*>[ \t]*){0,3}(?:[ \t]*\n){1,3}(?:artikelnr\.|item number|preis|price):'
+      flags: [i, m]
+      in: [text]
 status_keywords:
   - status: delivered
     patterns: ["delivered|zugestellt|angekommen"]
     in: [subject]
 default_status: in_transit
+# Order updates without a number are left to order-ebay.
+require: [tracking_number]
 tests:
   - fixture: ebay-de-shipped.eml
     expect:
+      - ruleId: order-ebay
+        event: order_shipped
+        orderNumbers: ["12-34567-89012"]
       - ruleId: parcel-ebay
         kind: parcel
         carrier: hermes
@@ -34,6 +47,9 @@ tests:
         items: ["Retro-Kofferradio, gebraucht"]
   - fixture: ebay-com-delivered.eml
     expect:
+      - ruleId: order-ebay
+        event: order_delivered
+        orderNumbers: ["21-12345-67890"]
       - ruleId: parcel-ebay
         carrier: usps
         trackingNumbers: ["9400111200000001234565"]

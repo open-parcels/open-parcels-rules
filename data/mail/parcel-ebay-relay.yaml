@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: parcel-ebay-relay
+name: Seller shipping notices relayed by eBay's member mail
+kind: parcel
+senders:
+  # Sellers write to buyers through <random>@members.ebay.com; often a carrier's own
+  # notification (DHL "Ihre <seller> Sendung ist unterwegs") forwarded by the seller's system.
+  domains: [members.ebay.com, members.ebay.de]
+subject:
+  - "sendung|shipment|parcel|paket|tracking"
+carrier_from: carrier
+extractors: [detect_tracking_numbers]
+extract:
+  carrier:
+    - pattern: '\b(?<carrier>DHL|Deutsche Post|Hermes|DPD|GLS|UPS|FedEx)\b'
+      in: [text]
+status_keywords:
+  - status: delivered
+    patterns: ["zugestellt|liegt im briefkasten|delivered"]
+    in: [subject]
+  - status: out_for_delivery
+    patterns: ["kommt heute|out for delivery"]
+    in: [subject]
+default_status: in_transit
+require: [tracking_number]
+tests:
+  - fixture: ebay-relay-dhl.eml
+    expect:
+      - ruleId: parcel-ebay-relay
+        kind: parcel
+        carrier: dhl
+        trackingNumbers: ["00340434123456789012"]
+        status: out_for_delivery
