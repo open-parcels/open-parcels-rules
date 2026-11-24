@@ -7,6 +7,9 @@ senders:
 subject:
   - "^order (?:confirmation|completed|success)"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: 'total value:\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     - pattern: '(?<order_number>\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b)'
   item:
@@ -26,6 +29,7 @@ tests:
   - fixture: gamivo-order-confirmation.eml
     expect:
       - ruleId: order-gamivo
+        total: { amount: 3.26, currency: EUR }
         kind: order
         event: order_confirmed
         orderNumbers: ["0f1e2d3c-4b5a-11ee-a000-0123456789ab"]

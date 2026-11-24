@@ -7,6 +7,9 @@ senders:
 subject:
   - "^mmoga - (?:bestellung|order|informationen zum produktversand|shipping information)"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: '\bsumme:\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     - pattern: '(?:bestellung|bestellnummer|order(?: number)?)\s*:\s*(?<order_number>\d{6,10})\b'
     - pattern: '[?&]order_id=(?<order_number>\d{6,10})\b'
@@ -27,6 +30,7 @@ tests:
   - fixture: mmoga-order.eml
     expect:
       - ruleId: order-mmoga
+        total: { amount: 12.99, currency: EUR }
         kind: order
         event: order_confirmed
         orderNumbers: ["12345678"]

@@ -7,6 +7,9 @@ senders:
 subject:
   - "your order #?o-[a-z0-9]+"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: 'order total:\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     - pattern: '(?:order (?:number:\s*|#))(?<order_number>o-[a-z0-9]{4,10})\b'
   item:
@@ -21,6 +24,7 @@ tests:
   - fixture: eneba-order.eml
     expect:
       - ruleId: order-eneba
+        total: { amount: 3.42, currency: EUR }
         kind: order
         event: order_confirmed
         orderNumbers: ["o-ab12c"]

@@ -33,6 +33,9 @@ subject:
 exclude:
   - "zahlungserinnerung|mahnung|zahlungsbestätigung|payment confirmation|conferma di pagamento|kundenkonto|customer account"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: '(?:gesamtsumme|order total)\s*:?\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     - pattern: '(?<order_number>\b\d{3}-\d{7}-\d{7}\b)'
 event_keywords:
@@ -49,6 +52,7 @@ tests:
   - fixture: amazon-de-order-confirmed.eml
     expect:
       - ruleId: order-amazon
+        total: { amount: 24.99, currency: EUR }
         kind: order
         event: order_confirmed
         orderNumbers: ["302-1234567-1234567"]

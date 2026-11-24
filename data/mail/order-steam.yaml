@@ -7,6 +7,11 @@ senders:
 subject:
   - "thank you for your (?:steam |gift |community market |recent )?purchase|vielen dank für ihren (?:steam-)?einkauf"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: '\btotal:\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
+      # The plain part only links to the receipt.
+      in: [text, html]
   order_number:
     # The plain part only links to the receipt; the HTML part carries the invoice number.
     - pattern: 'invoice:\s*(?<order_number>\d{15,20})\b'
@@ -29,6 +34,7 @@ tests:
   - fixture: steam-purchase.eml
     expect:
       - ruleId: order-steam
+        total: { amount: 13.99, currency: EUR }
         kind: order
         event: order_confirmed
         orderNumbers: ["712345678901234567"]
@@ -37,6 +43,7 @@ tests:
   - fixture: steam-market-purchase.eml
     expect:
       - ruleId: order-steam
+        total: { amount: 0.99, currency: EUR }
         event: order_confirmed
         orderNumbers: ["612345678901234567-612345678901234568"]
         items: ["Example Sticker | Gold"]

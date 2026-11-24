@@ -9,6 +9,9 @@ subject:
 exclude:
   - "ihre anfrage|meinung"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: 'rechnungssumme:?\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     - pattern: '(?:bestellung(?:snummer)?|bestellnr\.?)\s*:?\s*\(?(?<order_number>\d{8,9})\b'
   item:
@@ -37,6 +40,7 @@ tests:
   - fixture: mediamarkt-order.eml
     expect:
       - ruleId: order-mediamarkt
+        total: { amount: 19.99, currency: EUR }
         kind: order
         event: order_confirmed
         orderNumbers: ["123456789"]

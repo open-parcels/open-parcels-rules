@@ -11,6 +11,9 @@ exclude:
   # is about to be auto-completed, which says nothing certain about the parcel).
   - "refund|erstattung|how did it go|tell us how|satisfied|purchase protection|closed|case |awaiting confirmation"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: 'order total\s*:?\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     - pattern: '(?:order|bestellung)\s*(?:id|no\.?|number|nummer)?\s*:?\s*(?<order_number>\d{15,17})\b'
   item:
@@ -46,6 +49,7 @@ tests:
   - fixture: aliexpress-order-confirmed.eml
     expect:
       - ruleId: order-aliexpress
+        total: { amount: 11.47, currency: EUR }
         kind: order
         event: order_confirmed
         orderNumbers: ["3012345678901912"]
@@ -53,6 +57,7 @@ tests:
   - fixture: aliexpress-order-shipped.eml
     expect:
       - ruleId: order-aliexpress
+        total: { amount: 11.47, currency: EUR }
         event: order_shipped
         orderNumbers: ["3012345678901912"]
         items: ["USB-C Charging Cable 1 m..."]

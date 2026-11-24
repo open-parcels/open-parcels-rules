@@ -7,6 +7,9 @@ senders:
 subject:
   - "bestellbestätigung|versandmitteilung|stornierung"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: '\bsumme:\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     - pattern: '(?:bestellbestätigung|vorgangsnummer:|bestellung)\s*(?<order_number>\d{6,9})\b'
   item:

@@ -7,6 +7,9 @@ senders:
 subject:
   - "your order #?[0-9a-f]{8,16} is complete|ihre bestellung"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: 'order total:\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     - pattern: 'order(?: id:)? #(?<order_number>[0-9a-f]{8,16})\b'
   item:
@@ -22,6 +25,7 @@ tests:
   - fixture: gog-order.eml
     expect:
       - ruleId: order-gog
+        total: { amount: 4.99, currency: EUR }
         kind: order
         event: order_confirmed
         orderNumbers: ["0a1b2c3d4e5f"]

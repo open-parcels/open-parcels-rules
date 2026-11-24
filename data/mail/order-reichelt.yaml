@@ -7,6 +7,9 @@ senders:
 subject:
   - "your order|ihre bestellung"
 extract:
+  # What the order costs in total.
+  total:
+    - pattern: 'value of order\s*=\s*(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
   order_number:
     # The I-Net number ties the confirmation (I-212100) to the shipping notice (212100).
     - pattern: '(?:processing number I-|I-Net[- ]Nummer\s*|I-Net number[^:\n]*:\s*|bearbeitungsnummer I-)(?<order_number>\d{5,8})\b'

@@ -25,6 +25,7 @@ tests:
   - fixture: mindfactory-shipped.eml
     expect:
       - ruleId: order-mindfactory
+        total: { amount: 262.61, currency: EUR }
         event: order_shipped
         orderNumbers: ["1234567"]
         items: ["EXAMPLE Mainboard ATX DDR4", "EXAMPLE CPU 6x 2.90GHz BOX"]
