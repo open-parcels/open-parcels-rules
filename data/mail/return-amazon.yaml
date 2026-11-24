@@ -17,7 +17,7 @@ senders:
       amazon.com.au,
       amazon.in,
     ]
-  local_parts: [order-update, rueckgabe, return, returns, no-reply]
+  local_parts: [order-update, rueckgabe, return, returns, no-reply, payments-messages]
 subject:
   - "return label|your return|refund|rücksendung|rückgabe|erstattung|zwrot|rimborso|rimborsato"
 exclude:
@@ -46,6 +46,12 @@ tests:
         kind: return
         event: refund_issued
         orderNumbers: ["302-1234567-1234567"]
+  - fixture: amazon-de-payments-refund.eml
+    expect:
+      - ruleId: return-amazon
+        kind: return
+        event: refund_issued
+        orderNumbers: ["302-7654321-7654321"]
   - fixture: amazon-uk-return-label.eml
     expect:
       - ruleId: return-amazon
