@@ -1,0 +1,20 @@
+From: AliExpress <transaction@notice.aliexpress.com>
+To: erika.mustermann@example.com
+Subject: Order 8123456789012345 : delivery confirmed
+Date: Thu, 19 Nov 2026 11:51:00 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>See order details</p>
+<p>Delivery complete</p>
+<p>Hi Erika Mustermann,</p>
+<p>Order <a href="https://www.aliexpress.com/p/order/detail.html?orderId=8123456789012345">8123456789012345</a> has been confirmed as received. You can view the order details below.</p>
+<p>Order details</p>
+<p>Example Electronics Store</p>
+<p>IDE Cable 0,2 m...</p>
+<p>white</p>
+<p>€ 1,70x1</p>
+<p>Order ID</p>
+<p>8123456789012345</p>
+</body></html>

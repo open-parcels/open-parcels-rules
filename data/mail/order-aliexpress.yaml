@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-aliexpress
+name: AliExpress order confirmations and order updates
+kind: order
+senders:
+  addresses: [transaction@notice.aliexpress.com]
+subject:
+  - "order|bestellung|delivery update|delivery has been confirmed|your package is"
+exclude:
+  # Review requests, protection notices, closed orders and "awaiting confirmation" (the order
+  # is about to be auto-completed, which says nothing certain about the parcel).
+  - "refund|erstattung|how did it go|tell us how|satisfied|purchase protection|closed|case |awaiting confirmation"
+extract:
+  order_number:
+    - pattern: '(?:order|bestellung)\s*(?:id|no\.?|number|nummer)?\s*:?\s*(?<order_number>\d{15,17})\b'
+  item:
+    # Name (often cut with "..."), optional link, variant, quantity (blank lines between) ("x1", "€ 2,99x1").
+    - pattern: '^(?<item>[^\s<][^\n<]{2,119}?)(?: <[^\n>]*>)?(?:[ \t]*\n){1,3}[^\s<][^\n<]{0,59}(?:[ \t]*\n){1,3}(?:€ ?[\d.,]+ ?)?x\d+[ \t]*$'
+      flags: [i, m]
+      in: [text]
+    # Older layout: linked name, then variant and quantity on one line ("white x1").
+    - pattern: '^(?<item>[^\s<][^\n<]{2,119}?) <[^\n>]*>(?:[ \t]*\n){1,3}[^\n<]{0,60} x\d+[ \t]*$'
+      flags: [i, m]
+      in: [text]
+event_keywords:
+  - event: order_cancelled
+    patterns: ["cancell?ed|storniert"]
+    in: [subject]
+  - event: order_delivered
+    patterns:
+      [
+        "delivery confirmed|delivery has been confirmed|delivered|signed for|has arrived[.!]|zugestellt",
+      ]
+    in: [subject]
+  - event: order_shipped
+    patterns:
+      [
+        "shipped|delivery update|ready to pick up|good news|gute nachrichten|in your country|local delivery|out for delivery|collected by the carrier|vom kurier abgeholt|versandt",
+      ]
+    in: [subject]
+  - event: order_confirmed
+    patterns: ["confirm|good to go|versandbereit|your aliexpress order \\d"]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: aliexpress-order-confirmed.eml
+    expect:
+      - ruleId: order-aliexpress
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["3012345678901912"]
+        items: ["USB-C Charging Cable 1 m...", "Mini Screwdriver Set 24 i..."]
+  - fixture: aliexpress-order-shipped.eml
+    expect:
+      - ruleId: order-aliexpress
+        event: order_shipped
+        orderNumbers: ["3012345678901912"]
+        items: ["USB-C Charging Cable 1 m..."]
+  - fixture: aliexpress-order-delivered.eml
+    expect:
+      - ruleId: order-aliexpress
+        event: order_delivered
+        orderNumbers: ["8123456789012345"]
+        items: ["IDE Cable 0,2 m..."]

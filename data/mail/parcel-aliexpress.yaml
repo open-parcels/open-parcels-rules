@@ -8,27 +8,59 @@ carrier: cainiao
 extractors: [detect_tracking_numbers]
 extract:
   tracking_number:
-    - pattern: 'package\s+(?<tracking_number>[A-Z0-9]{10,30}):'
+    - pattern: '(?:package|paket|packstück)\s+(?<tracking_number>[A-Z0-9]{10,30})\b'
       in: [subject]
+    # Package lists link every parcel to /p/tracking/…?trackingNumber=<number>.
+    - pattern: '[?&]trackingNumber=(?<tracking_number>[A-Z0-9]{8,30})\b'
+      in: [text]
   order_number:
-    - pattern: '(?:order|bestellung)\s*(?:no\.?|number|nummer)?\s*:?\s*(?<order_number>\d{15,17})\b'
+    - pattern: '(?:order|bestellung)\s*(?:id|no\.?|number|nummer)?\s*:?\s*(?<order_number>\d{15,17})\b'
+    - pattern: '[?&]tradeOrderId=(?<order_number>\d{15,17})\b'
+      in: [text]
+  item:
+    # Name (often cut with "..."), optional link, variant, quantity (blank lines between) ("x1", "€ 2,99x1").
+    - pattern: '^(?<item>[^\s<][^\n<]{2,119}?)(?: <[^\n>]*>)?(?:[ \t]*\n){1,3}[^\s<][^\n<]{0,59}(?:[ \t]*\n){1,3}(?:€ ?[\d.,]+ ?)?x\d+[ \t]*$'
+      flags: [i, m]
+      in: [text]
+    # Older layout: linked name, then variant and quantity on one line ("white x1").
+    - pattern: '^(?<item>[^\s<][^\n<]{2,119}?) <[^\n>]*>(?:[ \t]*\n){1,3}[^\n<]{0,60} x\d+[ \t]*$'
+      flags: [i, m]
+      in: [text]
 status_keywords:
   - status: delivered
-    patterns: ["delivered|zugestellt"]
+    patterns: ["delivered|wurde zugestellt|signed for"]
     in: [subject]
   - status: at_pickup_point
-    patterns: ["ready for pickup|ready to collect|abholbereit"]
+    patterns: ["ready for pickup|ready to pick up|ready to collect|abholbereit"]
   - status: out_for_delivery
-    patterns: ["out for delivery|in zustellung"]
+    patterns: ["out for delivery|in zustellung|wird zugestellt|zur auslieferung bereit"]
   - status: problem
-    patterns: ["delivery failed|customs (?:hold|issue)|unsuccessful"]
+    patterns: ["delivery failed|delivery issue|customs (?:hold|issue)|unsuccessful"]
 default_status: in_transit
 require: [tracking_number]
 tests:
   - fixture: aliexpress-shipped.eml
     expect:
+      - ruleId: order-aliexpress
+        event: order_shipped
+        orderNumbers: ["8123456789012345"]
       - ruleId: parcel-aliexpress
         carrier: china_post
         trackingNumbers: ["LP000123455CN"]
         orderNumbers: ["8123456789012345"]
         status: in_transit
+  - fixture: aliexpress-packages-update.eml
+    expect:
+      - ruleId: parcel-aliexpress
+        kind: parcel
+        trackingNumbers: ["LP00123456789012", "LP00123456789029"]
+        orderNumbers: ["3012345678901912", "3012345678902912"]
+        status: in_transit
+        items: ["Zigbee Door Window Sensor...", "Smart Wall Switch 2 Ga..."]
+  - fixture: aliexpress-out-for-delivery.eml
+    expect:
+      - ruleId: parcel-aliexpress
+        carrier: dhl
+        trackingNumbers: ["00340434123456789012"]
+        status: out_for_delivery
+        items: ["Outdoor Wireless Camera ..."]

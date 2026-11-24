@@ -1,0 +1,28 @@
+From: AliExpress <transaction@notice.aliexpress.com>
+To: erika.mustermann@example.com
+Subject: Order 3012345678901912: order confirmed
+Date: Wed, 04 Nov 2026 16:24:00 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Your order is good to go!</p>
+<p>Order confirmation</p>
+<p>Hi Erika Mustermann,</p>
+<p>Thank you for shopping with us. Your order <a href="https://www.aliexpress.com/p/order/detail.html?orderId=3012345678901912">3012345678901912</a> is confirmed. We'll let you know when your order ships.</p>
+<p>Order details</p>
+<p>Placed on Nov 04,2026, 16:24</p>
+<p><a href="https://www.aliexpress.com/store/1100000001">Example Cable Store</a></p>
+<p>USB-C Charging Cable 1 m...</p>
+<p>Black, 1m</p>
+<p>€ 2,99x2</p>
+<p>Mini Screwdriver Set 24 i...</p>
+<p>24 in 1</p>
+<p>€ 5,49x1</p>
+<p>Order ID</p>
+<p>3012345678901912</p>
+<p>Order total</p>
+<p>€ 11,47</p>
+<p>Ship to</p>
+<p>Musterstraße 1, Musterstadt</p>
+</body></html>

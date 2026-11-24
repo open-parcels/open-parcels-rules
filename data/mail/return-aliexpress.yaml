@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: return-aliexpress
+name: AliExpress returns and refunds
+kind: return
+senders:
+  # Refund confirmations also come from promotion@aliexpress.com.
+  addresses: [transaction@notice.aliexpress.com, promotion@aliexpress.com]
+subject:
+  - "refund|erstattung|return your item|rücksendung"
+exclude:
+  - "request process|antragsprozess"
+extract:
+  order_number:
+    - pattern: '(?:order|bestellung)\s*(?:id|no\.?|number|nummer)?\s*:?\s*(?<order_number>\d{15,17})\b'
+    - pattern: '[?&]tradeOrderId=(?<order_number>\d{15,17})\b'
+      in: [text]
+event_keywords:
+  - event: refund_issued
+    patterns:
+      [
+        "refund (?:has been )?processed|refund confirmed|erstattung (?:wurde )?(?:bearbeitet|veranlasst)",
+      ]
+  - event: return_started
+    patterns: ["return your item|rücksendung"]
+    in: [subject]
+tests:
+  - fixture: aliexpress-refund.eml
+    expect:
+      - ruleId: return-aliexpress
+        kind: return
+        event: refund_issued
+        orderNumbers: ["3012345678901912"]

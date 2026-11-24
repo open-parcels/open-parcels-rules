@@ -1,0 +1,18 @@
+From: AliExpress <transaction@notice.aliexpress.com>
+To: erika.mustermann@example.com
+Subject: Order 3012345678901912: order shipped
+Date: Sat, 07 Nov 2026 09:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Track your order</p>
+<p>Hi Erika Mustermann,</p>
+<p>Your order <a href="https://www.aliexpress.com/p/order/detail.html?orderId=3012345678901912&amp;tracelog=rowan&amp;rowan_id1=send_all_goods_202611071200_1_en_US">3012345678901912</a> has shipped.</p>
+<p><a href="https://www.aliexpress.com/p/order/detail.html?orderId=3012345678901912&amp;edm_log_data=track-order-log-link&amp;rowan_msg_id=1912301234567890$abc">Track order</a></p>
+<p>USB-C Charging Cable 1 m...</p>
+<p>Black, 1m</p>
+<p>x2</p>
+<p>Order total</p>
+<p>11,47€</p>
+</body></html>
