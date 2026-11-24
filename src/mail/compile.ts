@@ -1,12 +1,12 @@
 import { compileDataRegex } from "../portability.ts";
 import type { RegexFlag, RegexLike } from "../schema/common.ts";
 import { toRegexSpec } from "../schema/common.ts";
-import type { MailEvent, MailField, MailKind, MailRule, MailSource } from "../schema/mail.ts";
+import type { MailEvent, MailField, MailKind, MailRule, MailPart } from "../schema/mail.ts";
 import type { ParcelStatus } from "../types.ts";
 
 export interface CompiledPattern {
   readonly regex: RegExp;
-  readonly in: readonly MailSource[];
+  readonly in: readonly MailPart[];
 }
 
 export interface CompiledMailRule {
@@ -38,7 +38,7 @@ function compileAll(list: readonly RegexLike[], flags: readonly RegexFlag[]): Re
 }
 
 function keywordPatterns(
-  group: { patterns: RegexLike[]; in: MailSource[] },
+  group: { patterns: RegexLike[]; in: MailPart[] },
   flags: readonly RegexFlag[],
 ): CompiledPattern[] {
   return compileAll(group.patterns, flags).map((regex) => ({ regex, in: group.in }));

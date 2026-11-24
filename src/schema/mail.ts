@@ -22,8 +22,8 @@ export const MAIL_EVENTS = [
 ] as const;
 export const mailEventSchema = z.enum(MAIL_EVENTS);
 
-export const MAIL_SOURCES = ["subject", "text", "html"] as const;
-const mailSourceSchema = z.enum(MAIL_SOURCES);
+export const MAIL_PARTS = ["subject", "text", "html"] as const;
+const mailPartSchema = z.enum(MAIL_PARTS);
 
 export const MAIL_FIELDS = [
   "tracking_number",
@@ -41,14 +41,14 @@ const extractSpecSchema = z.strictObject({
     description: "Must contain a named group called like the field, e.g. (?<tracking_number>...).",
   }),
   flags: z.array(regexFlagSchema).optional(),
-  in: z.array(mailSourceSchema).min(1).default(["subject", "text"]).meta({
+  in: z.array(mailPartSchema).min(1).default(["subject", "text"]).meta({
     description: "Where to search; html means the HTML part converted to plain text.",
   }),
 });
 
 const keywordSchema = z.strictObject({
   patterns: z.array(regexLikeSchema).min(1),
-  in: z.array(mailSourceSchema).min(1).default(["subject", "text"]),
+  in: z.array(mailPartSchema).min(1).default(["subject", "text"]),
 });
 
 const statusKeywordSchema = keywordSchema.extend({ status: parcelStatusSchema });
@@ -99,7 +99,7 @@ export const mailRuleSchema = z.strictObject({
   body: z.array(regexLikeSchema).optional().meta({
     description:
       "If set, at least one must match the text (or the HTML as text); for senders such as " +
-      "marketplaces that relay mails of several carriers.",
+      "marketplaces that relay emails of several carriers.",
   }),
   extract: z.partialRecord(mailFieldSchema, z.array(extractSpecSchema).min(1)).default({}),
   status_keywords: z.array(statusKeywordSchema).default([]).meta({
@@ -129,4 +129,4 @@ export type MailRuleInput = z.input<typeof mailRuleSchema>;
 export type MailKind = z.infer<typeof mailKindSchema>;
 export type MailEvent = z.infer<typeof mailEventSchema>;
 export type MailField = z.infer<typeof mailFieldSchema>;
-export type MailSource = (typeof MAIL_SOURCES)[number];
+export type MailPart = (typeof MAIL_PARTS)[number];

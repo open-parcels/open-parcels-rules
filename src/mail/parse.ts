@@ -2,7 +2,7 @@ import { parseWithGrammar } from "../arrival/parse.ts";
 import { domainMatches, lookupCarrier } from "../carriers.ts";
 import type { Rules } from "../rules.ts";
 import { grammarFor } from "../rules.ts";
-import type { MailField, MailSource } from "../schema/mail.ts";
+import type { MailField, MailPart } from "../schema/mail.ts";
 import { detect } from "../tracking/detect.ts";
 import { normalizeTrackingNumber } from "../tracking/validate.ts";
 import type { ArrivalWindow, MailInput, MailParseResult } from "../types.ts";
@@ -18,12 +18,12 @@ import { EXTRACTORS } from "./extractors.ts";
 import { htmlToText } from "./html.ts";
 import { extractSchemaOrg } from "./schema-org.ts";
 
-type Sources = Readonly<Record<MailSource, string>>;
+type Parts = Readonly<Record<MailPart, string>>;
 
 interface Prepared {
   readonly address: string;
   readonly domain: string;
-  readonly sources: Sources;
+  readonly parts: Parts;
   readonly mail: MailInput;
 }
 
@@ -51,7 +51,7 @@ function prepare(mail: MailInput): Prepared {
   return {
     address,
     domain: address.slice(address.lastIndexOf("@") + 1),
-    sources: { subject: mail.subject, text, html },
+    parts: { subject: mail.subject, text, html },
     mail,
   };
 }
@@ -64,7 +64,7 @@ function senderMatches(rule: CompiledMailRule, prepared: Prepared): boolean {
 }
 
 function ruleApplies(rule: CompiledMailRule, prepared: Prepared): boolean {
-  const { subject, text } = prepared.sources;
+  const { subject, text } = prepared.parts;
   return (
     senderMatches(rule, prepared) &&
     !rule.exclude.some((regex) => regex.test(subject)) &&
@@ -73,16 +73,14 @@ function ruleApplies(rule: CompiledMailRule, prepared: Prepared): boolean {
   );
 }
 
-function anyMatch(patterns: readonly CompiledPattern[], sources: Sources): boolean {
-  return patterns.some((pattern) =>
-    pattern.in.some((source) => pattern.regex.test(sources[source])),
-  );
+function anyMatch(patterns: readonly CompiledPattern[], parts: Parts): boolean {
+  return patterns.some((pattern) => pattern.in.some((part) => pattern.regex.test(parts[part])));
 }
 
-function collectField(rule: CompiledMailRule, field: MailField, sources: Sources): string[] {
+function collectField(rule: CompiledMailRule, field: MailField, parts: Parts): string[] {
   const values = (rule.extract.get(field) ?? []).flatMap((pattern) =>
-    pattern.in.flatMap((source) =>
-      Array.from(sources[source].matchAll(pattern.regex), (match) => match.groups?.[field]?.trim()),
+    pattern.in.flatMap((part) =>
+      Array.from(parts[part].matchAll(pattern.regex), (match) => match.groups?.[field]?.trim()),
     ),
   );
   return unique(values.filter((value): value is string => value !== undefined && value !== ""));
@@ -105,9 +103,9 @@ function arrivalFrom(
 }
 
 /** The carrier the mail names in its carrier field, if the rule reads one. */
-function namedCarrier(rules: Rules, rule: CompiledMailRule, sources: Sources): string | undefined {
+function namedCarrier(rules: Rules, rule: CompiledMailRule, parts: Parts): string | undefined {
   if (!rule.carrierFrom) return undefined;
-  for (const name of collectField(rule, "carrier", sources)) {
+  for (const name of collectField(rule, "carrier", parts)) {
     const carrier = lookupCarrier(rules.carriers, name);
     if (carrier !== undefined) return carrier.id;
   }
@@ -133,8 +131,8 @@ function runExtractors(
     const extractor = EXTRACTORS[name];
     if (extractor === undefined) continue;
     const output = extractor({
-      subject: prepared.sources.subject,
-      text: prepared.sources.text,
+      subject: prepared.parts.subject,
+      text: prepared.parts.text,
       senderDomain: prepared.domain,
       carrier: draft.carrier ?? rule.carrier,
       detect: (text, hints) => trustedCandidates(rules, text, detect(rules, text, hints)),
@@ -149,30 +147,30 @@ function applyRule(
   rule: CompiledMailRule,
   prepared: Prepared,
 ): MailParseResult | null {
-  const { sources } = prepared;
+  const { parts } = prepared;
   const draft: Draft = {
-    carrier: namedCarrier(rules, rule, sources),
+    carrier: namedCarrier(rules, rule, parts),
     trackingNumbers: unique(
-      collectField(rule, "tracking_number", sources).map(normalizeTrackingNumber),
+      collectField(rule, "tracking_number", parts).map(normalizeTrackingNumber),
     ),
   };
   runExtractors(rules, rule, prepared, draft);
   // Named in the mail, else recognised from the numbers, else the rule's default.
   draft.carrier ??= rule.carrier;
-  const orderNumbers = collectField(rule, "order_number", sources);
+  const orderNumbers = collectField(rule, "order_number", parts);
   // A 14-digit order number also looks like a 14-digit parcel number; the label decides.
   const orders = new Set(orderNumbers.map(normalizeTrackingNumber));
   draft.trackingNumbers = draft.trackingNumbers.filter((number) => !orders.has(number));
-  const items = collectField(rule, "item", sources).filter((item) => !isBoilerplateItem(item));
+  const items = collectField(rule, "item", parts).filter((item) => !isBoilerplateItem(item));
   const trackingUrl = httpUrl(
-    collectField(rule, "tracking_url", sources)[0]?.replace(TRAILING_URL_PUNCTUATION, ""),
+    collectField(rule, "tracking_url", parts)[0]?.replace(TRAILING_URL_PUNCTUATION, ""),
   );
-  const pickupCode = collectField(rule, "pickup_code", sources)[0];
-  const arrival = arrivalFrom(rules, collectField(rule, "arrival", sources), prepared.mail);
+  const pickupCode = collectField(rule, "pickup_code", parts)[0];
+  const arrival = arrivalFrom(rules, collectField(rule, "arrival", parts), prepared.mail);
   const status =
-    rule.statusKeywords.find((group) => anyMatch(group.patterns, sources))?.status ??
+    rule.statusKeywords.find((group) => anyMatch(group.patterns, parts))?.status ??
     rule.defaultStatus;
-  const event = rule.eventKeywords.find((group) => anyMatch(group.patterns, sources))?.event;
+  const event = rule.eventKeywords.find((group) => anyMatch(group.patterns, parts))?.event;
   const present: Record<MailField, boolean> = {
     tracking_number: draft.trackingNumbers.length > 0,
     order_number: orderNumbers.length > 0,
@@ -251,7 +249,7 @@ function arrivalFromIso(from: string | undefined, until: string): ArrivalWindow 
 }
 
 function fallback(rules: Rules, prepared: Prepared): MailParseResult[] {
-  const { subject, text } = prepared.sources;
+  const { subject, text } = prepared.parts;
   const body = `${subject}\n${text}`;
   // Only carriers and shops the rules know may announce a parcel by a bare number.
   if (!isKnownSender(rules, prepared.domain)) return [];
