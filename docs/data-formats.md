@@ -90,7 +90,7 @@ A raw status is `{ code?, text?, fields? }`. There are four kinds of match, trie
   integer, higher is later, for ordering events with the same time), `label` (a neutral display
   text for carriers whose own wording carries personal data) and `note`. `stage` and `label` are
   returned with the mapping.
-- `ignore` lists values that say the item is no parcel at all, with the mail event they amount
+- `ignore` lists values that say the item is no parcel at all, with the email event they amount
   to: `{ match: { text: "^storniert", flags: [i] }, event: order_cancelled }`. They are matched
   like entries but never returned by mapping; `ignoredStatus` reads them.
 - `confirmed: false` marks a plausible guess not yet seen in real data; consumers may log
@@ -127,7 +127,7 @@ Word lists, not regexes, so the engine can combine languages: `months` (12 lists
 that name today or a past day on their own, such as timeline headers; not used by the arrival
 parser), `lead_ins`
 (words that announce an arrival), `range_separators`, `window_openers`, `deadline_words`,
-`point_words`, `hour_words`, `am_markers`, `pm_markers`, `tracking_keywords` (used by the mail
+`point_words`, `hour_words`, `am_markers`, `pm_markers`, `tracking_keywords` (used by the email
 fallback) and two regex lists: `negatives` (the text announces no arrival) and `cut_markers`
 (ignore everything from here, e.g. "previously expected").
 
@@ -145,6 +145,6 @@ The parser's rules:
 Every vector is `{ text, now, time_zone, expect }`, with `expect: null` for texts that must
 not parse.
 
-## Mail rules (`data/mail/<id>.yaml`)
+## Email rules (`data/mail/<id>.yaml`)
 
 See [mail-rules.md](mail-rules.md).

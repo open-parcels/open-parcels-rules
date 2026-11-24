@@ -6,7 +6,7 @@ them all, and nothing merges without a green gate.
 
 ## Ground rules
 
-- **Made-up values only.** No real tracking numbers, order numbers, names, addresses or mail
+- **Made-up values only.** No real tracking numbers, order numbers, names, addresses or email
   addresses in data or fixtures. Numbers must still be valid: compute their check digits (the
   engine's `verifyChecksum` in `src/tracking/checksums.ts` does it), never copy one from a
   real parcel.
@@ -44,11 +44,11 @@ word lists. Leave out short words that are also ordinary words (German "so", "do
 vectors for whole days, ranges, time windows, and texts that must not parse. Test around a
 daylight-saving change in a zone that has one.
 
-## Adding a mail rule
+## Adding an email rule
 
 1. Write the rule as `data/mail/<kind>-<sender>.yaml` (see [mail-rules.md](mail-rules.md)).
 2. Write one or more fixtures in `test/fixtures/mail/` and list them under `tests` with the
-   expected results. Include every result the mail produces, from all rules, in rule-id order.
+   expected results. Include every result the email produces, from all rules, in rule-id order.
 3. Prefer `detect_tracking_numbers` over a loose digit regex; prefer `require` over rules
    that produce empty results.
 

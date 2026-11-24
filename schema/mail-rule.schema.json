@@ -145,7 +145,7 @@
       }
     },
     "body": {
-      "description": "If set, at least one must match the text (or the HTML as text); for senders such as marketplaces that relay mails of several carriers.",
+      "description": "If set, at least one must match the text (or the HTML as text); for senders such as marketplaces that relay emails of several carriers.",
       "type": "array",
       "items": {
         "anyOf": [

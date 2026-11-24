@@ -50,7 +50,7 @@ import type { Rules, ParcelStatus, CarrierInfo, TrackingCandidate } from "open-p
 | `trackingUrl(rules, carrierId, number, locale?, params?)` | The tracking page: tries the full locale tag, then the language, then `default`, skipping a template whose placeholders (such as `{postcode}`) `params` does not fill. |
 | `detectTrackingNumbers(rules, text, hints?)` | Every plausible `{ carrier, trackingNumber, confidence, checksumValid, types }`, best first. |
 | `mapStatus(rules, carrier, { code?, text?, fields? })` | `{ status, pickup?, confirmed, stage?, label? }` or `null` when the table lacks the value. |
-| `ignoredStatus(rules, carrier, raw)` | The mail event an `ignore` entry gives the value (`order_cancelled`, `refund_issued`, ...), or `null`. |
+| `ignoredStatus(rules, carrier, raw)` | The email event an `ignore` entry gives the value (`order_cancelled`, `refund_issued`, ...), or `null`. |
 | `findCarrierKey(rules, carrier, name)` | `{ carrier, name, purpose, source, lastVerified, value }` from `keys.yaml`, or `undefined`. |
 | `carrierKeys(rules, carrier)` | Every key listed for a carrier. |
 | `pastDayOffset(rules, word, locales?)` | The offset (0 today, -1 yesterday) a standalone word names, or `undefined`. |
@@ -60,7 +60,7 @@ import type { Rules, ParcelStatus, CarrierInfo, TrackingCandidate } from "open-p
 
 Additions to the contract: `rulesFromBundle`, `portabilityProblems(pattern)` (the regex-subset
 check, for tools that edit data), `PARCEL_STATUSES`, the `types` field on tracking
-candidates (format ids such as `dhl_paket_nve`), and `event` on mail results.
+candidates (format ids such as `dhl_paket_nve`), and `event` on email results.
 
 ### Detection and confidence
 
@@ -86,7 +86,7 @@ a daylight-saving change carries two different offsets. Whole days end at the ne
 00:00 (exclusive). A deadline ("by 9 pm") starts at 00:00; a single time ("um 15:30 Uhr") has
 `from === to`. An invalid IANA zone throws a `RangeError`.
 
-### Mails
+### Emails
 
 ```ts
 parseMail(rules, {
@@ -111,4 +111,4 @@ reports.
 `python/open_parcels_rules` reads `dist/bundle.json` with the standard library only and offers
 `load_rules`, `validate_tracking_number`, `detect_tracking_numbers` (no confidence model),
 `map_status` and `ignored_status`. `python -I python/run_vectors.py` runs the tracking and status vectors from
-`dist/vectors.json`. Arrival parsing and mail rules are TypeScript only for now.
+`dist/vectors.json`. Arrival parsing and email rules are TypeScript only for now.

@@ -20,7 +20,7 @@ TypeScript engine that reads it:
 - **Carrier status tables**: raw carrier codes and texts mapped onto eight canonical states.
 - **Delivery-date phrases**: "Arriving 3 - 5 December", "Zustellung heute 17h - 19h" and the
   like turned into a time window in the right time zone.
-- **Shipping-mail rules**: which sender says what, and where the tracking number, order
+- **Shipping-email rules**: which sender says what, and where the tracking number, order
   number, arrival date and pickup code are.
 
 The data is language neutral (YAML and JSON with JSON Schemas, and a regex subset that compiles
@@ -31,13 +31,13 @@ loader in [`python/`](python/) proves that.
 
 | Path | What it holds |
 | --- | --- |
-| [`data/carriers.yaml`](data/carriers.yaml) | Carrier registry: id, name, aliases, countries, mail domains, tracking URL templates per locale, tracking-number shape, cross-reference ids |
+| [`data/carriers.yaml`](data/carriers.yaml) | Carrier registry: id, name, aliases, countries, email domains, tracking URL templates per locale, tracking-number shape, cross-reference ids |
 | [`data/keys.yaml`](data/keys.yaml) | Fixed public values carriers expect from every client (website and app keys, client ids, app versions, User-Agents), with purpose, source and last-verified date |
 | [`data/tracking-numbers/`](data/tracking-numbers/) | Our tracking-number formats, in the same schema as the vendored community files |
 | [`vendor/tracking_number_data/`](vendor/tracking_number_data/) | Pinned, unmodified copy of the community tracking_number_data courier files (MIT, see its `LICENSE` and `VERSION`) |
 | [`data/status/`](data/status/) | Status tables per carrier, with test vectors |
 | [`data/locales/`](data/locales/) | Delivery-date words and phrases per language, with test vectors |
-| [`data/mail/`](data/mail/) | One YAML file per mail rule, each tested against made-up `.eml` fixtures in [`test/fixtures/mail/`](test/fixtures/mail/) |
+| [`data/mail/`](data/mail/) | One YAML file per email rule, each tested against made-up `.eml` fixtures in [`test/fixtures/mail/`](test/fixtures/mail/) |
 | [`schema/`](schema/) | JSON Schema (2020-12) for every data file type, generated from the TypeScript schemas |
 | [`src/`](src/) | The TypeScript engine |
 | [`python/`](python/) | Python reference loader and vector runner |
@@ -69,7 +69,7 @@ parseArrival(rules, "Zustellung heute 17h - 19h", { now: new Date(), timeZone: "
 parseMail(rules, { from: "noreply@dhl.de", subject: "Ihr DHL Paket kommt heute", text, date });
 ```
 
-The full API, with every option, is in [`docs/consuming.md`](docs/consuming.md). Mail results
+The full API, with every option, is in [`docs/consuming.md`](docs/consuming.md). Email results
 can carry a `pickupCode`: show it to the recipient, but never write it to logs.
 
 ## Using it from Python
@@ -94,7 +94,7 @@ Every rule comes with test vectors, and the gate fails without them. In short:
 1. Edit or add the data file (the `# yaml-language-server: $schema=...` header gives editor
    completion).
 2. Add vectors: `test_numbers` for formats, `tests` for statuses and locales, and an `.eml`
-   fixture with its expected result for mail rules. Use made-up values only; numbers must
+   fixture with its expected result for email rules. Use made-up values only; numbers must
    still pass their check digits.
 3. Run `npm run gate`.
 

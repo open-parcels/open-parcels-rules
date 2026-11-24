@@ -1,7 +1,7 @@
-# Mail rules
+# Email rules
 
-One YAML file per rule in `data/mail/`, named after its `id` (`<kind>-<sender>`). A mail can
-match several rules (an Amazon shipping mail yields a `parcel` and an `order` result); results
+One YAML file per rule in `data/mail/`, named after its `id` (`<kind>-<sender>`). An email can
+match several rules (an Amazon shipping email yields a `parcel` and an `order` result); results
 come in rule-id order.
 
 ```yaml
@@ -41,13 +41,13 @@ tests:
 ```
 
 - `in` takes `subject`, `text` and `html` (the HTML part converted to text, with link targets
-  kept as `<url>`). The default is `[subject, text]`; `text` is the HTML as text when a mail
+  kept as `<url>`). The default is `[subject, text]`; `text` is the HTML as text when an email
   has no plain part.
 - Each extraction pattern must contain a group named after its field; every match is
   collected, deduplicated, in order. Tracking numbers lose their spaces and are upper-cased,
   and a number that also appears as an order number is dropped.
-- `arrival` texts are parsed with all locales against the mail's `Date`; a timed window wins
-  over a whole day. Without a mail date there is no arrival.
+- `arrival` texts are parsed with all locales against the email's `Date`; a timed window wins
+  over a whole day. Without an email date there is no arrival.
 - Events: `order_placed`, `order_confirmed`, `order_shipped`, `order_delivered` (the shop
   says the order arrived, without a tracking number), `order_cancelled`,
   `return_started`, `return_received`, `refund_issued`, `return_rejected`,
@@ -60,8 +60,8 @@ For the few things a regex cannot express, a rule may name code in
 
 - **`detect_tracking_numbers`**: runs the checksum-aware tracking-number detector over the
   subject and text, with the sender domain and the rule's carrier (or the one named in the
-  mail) as hints, and adds every number with a confidence of at least 0.5. When all of them
-  belong to one carrier and the mail names none, that carrier is used. Shops and marketplaces
+  email) as hints, and adds every number with a confidence of at least 0.5. When all of them
+  belong to one carrier and the email names none, that carrier is used. Shops and marketplaces
   whose carrier varies (eBay, OTTO, Zalando, JLCPCB, BerryBase) and carriers with several
   number formats use it instead of a loose digit regex.
 
@@ -70,12 +70,12 @@ Add another only when data cannot do the job, and document it here.
 ## Beyond the rules
 
 - **schema.org**: `ParcelDelivery` in JSON-LD (`<script type="application/ld+json">`) or
-  microdata gives an extra result with `ruleId: "schema.org"`. Mails without the word
+  microdata gives an extra result with `ruleId: "schema.org"`. Emails without the word
   `ParcelDelivery` cost nothing.
-- **Fallback**: when no rule and no markup applies, a mail from a known sender (a carrier
-  domain in `carriers.yaml`, or a domain a non-`ignore` mail rule reads) is scanned for tracking
+- **Fallback**: when no rule and no markup applies, an email from a known sender (a carrier
+  domain in `carriers.yaml`, or a domain a non-`ignore` email rule reads) is scanned for tracking
   numbers; numbers with a confidence of at least 0.6 give a result with `ruleId: "fallback"`.
-  Mail from any other sender gives nothing.
+  Email from any other sender gives nothing.
 
 ## Detected numbers must look like tracking numbers
 
@@ -94,8 +94,8 @@ Item bullets that are instructions ("Enter the recipient's postal code …") are
 
 ## Ignore rules
 
-A rule with `kind: ignore` matches mails that never describe a parcel: account details,
-developer portals, newsletters. When one applies, the mail yields no result at all, whatever
+A rule with `kind: ignore` matches emails that never describe a parcel: account details,
+developer portals, newsletters. When one applies, the email yields no result at all, whatever
 other rules say. Give it test vectors with `expect: []`.
 
 ## Fixtures
