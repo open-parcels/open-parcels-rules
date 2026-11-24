@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-mmoga
+name: MMOGA orders (digital keys, no parcel)
+kind: order
+senders:
+  addresses: [info@mmoga.de]
+subject:
+  - "^mmoga - (?:bestellung|order|informationen zum produktversand|shipping information)"
+extract:
+  order_number:
+    - pattern: '(?:bestellung|bestellnummer|order(?: number)?)\s*:\s*(?<order_number>\d{6,10})\b'
+    - pattern: '[?&]order_id=(?<order_number>\d{6,10})\b'
+      in: [text]
+  item:
+    - pattern: '^\s*\d+ ?x (?<item>[^\n]{2,120}?)(?: \d+,\d\d)?[ \t]*$'
+      flags: [i, m]
+      in: [text]
+event_keywords:
+  - event: order_delivered
+    patterns: ["produktversand|shipping information"]
+    in: [subject]
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: mmoga-order.eml
+    expect:
+      - ruleId: order-mmoga
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["12345678"]
+        items: ["Example Strategy Game - Steam Key"]
+  - fixture: mmoga-delivered.eml
+    expect:
+      - ruleId: order-mmoga
+        event: order_delivered
+        orderNumbers: ["12345678"]
+        items: ["Example Strategy Game - Steam Key"]

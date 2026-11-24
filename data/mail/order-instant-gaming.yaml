@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-instant-gaming
+name: Instant Gaming orders (digital keys, no parcel)
+kind: order
+senders:
+  addresses: [noreply@email.instant-gaming.com, notification@email.instant-gaming.com]
+subject:
+  - "payment has been accepted|thank you for your order|vielen dank für deine bestellung|zahlung wurde akzeptiert"
+extract:
+  order_number:
+    - pattern: '(?:order number|bestellnummer|bestellung)\s*:?\s*#?(?<order_number>\d{6,12})\b'
+  item:
+    - pattern: '(?:product|produkt):\s*(?<item>[^\n]{2,120})'
+      in: [text]
+    - pattern: '^(?<item>[^\s<][^\n<]{1,119})(?:[ \t]*\n){1,3}(?:bestellnummer|order number):'
+      flags: [i, m]
+      in: [text]
+event_keywords:
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: instant-gaming-order.eml
+    expect:
+      - ruleId: order-instant-gaming
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["123456789"]
+        items: ["Example Racing Game (Europe)"]

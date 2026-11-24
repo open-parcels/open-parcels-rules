@@ -1,0 +1,34 @@
+From: "Steam Support" <noreply@steampowered.com>
+To: erika.mustermann@example.com
+Subject: Thank you for your Steam purchase!
+Date: Sat, 14 Nov 2026 16:07:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset=utf-8
+
+Hello erikagamer
+
+Thank you for your recent transaction on Steam.  To view the details, please
+visit
+https://store.steampowered.com/email/VATPurchaseReceipt?sparams=example
+
+--b1
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Hello erikagamer</p>
+<p>Thank you for your recent transaction on Steam.</p>
+<p>The items below have been added to your Steam Library.</p>
+<p>Example Space Game</p>
+<p>Subtotal (excl. VAT): 11,76€</p>
+<p>VAT at 19%: 2,23€</p>
+<p>Total: 13,99€</p>
+<p>Account name: erikagamer</p>
+<p>Invoice:</p>
+<p>712345678901234567</p>
+<p>Date issued: 14 Nov, 2026 @ 4:07pm CET</p>
+<p>Payment method: PayPal</p>
+</body></html>
+--b1--

@@ -1,0 +1,17 @@
+From: Fanatical <info@mailer.fanatical.com>
+To: erika.mustermann@example.com
+Subject: Thank you for your Fanatical order
+Date: Sun, 15 Nov 2026 12:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Thank you for your order! Here is your receipt:</p>
+<p>Date of purchase: 11/15/26</p>
+<p>Fanatical order number: 0123456789abcdef01234567</p>
+<p>Example Parkour Game</p>
+<p>Quantity: 1</p>
+<p>Price: €4.79</p>
+<p>Total: €4.79</p>
+<p><a href="https://www.fanatical.com/orders/0123456789abcdef01234567">VIEW ORDER</a></p>
+</body></html>

@@ -1,0 +1,13 @@
+From: "GAMIVO.com" <gamivo@gamivo.com>
+To: erika.mustermann@example.com
+Subject: Order completed [0f1e2d3c-4b5a-11ee-a000-0123456789ab]
+Date: Thu, 12 Nov 2026 17:35:00 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Order completed</p>
+<p>Your order 0f1e2d3c-4b5a-11ee-a000-0123456789ab is now completed.</p>
+<p>Example Tabletop Game</p>
+<p>Your products are available in your user panel.</p>
+</body></html>

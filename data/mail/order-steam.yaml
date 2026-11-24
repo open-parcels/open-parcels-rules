@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-steam
+name: Steam purchase receipts (digital orders, no parcel)
+kind: order
+senders:
+  addresses: [noreply@steampowered.com]
+subject:
+  - "thank you for your (?:steam |gift |community market |recent )?purchase|vielen dank für ihren (?:steam-)?einkauf"
+extract:
+  order_number:
+    # The plain part only links to the receipt; the HTML part carries the invoice number.
+    - pattern: 'invoice:\s*(?<order_number>\d{15,20})\b'
+      in: [html]
+    - pattern: 'confirmation number\s+(?<order_number>\d{15,20}(?:-\d{15,20})?)\b'
+      in: [text, html]
+  item:
+    - pattern: '^(?<item>[^\s<][^\n<]{1,119}?)[ \t]*(?:[ \t]*\n){1,3}subtotal \(excl'
+      flags: [i, m]
+      in: [html]
+    - pattern: '^(?<item>[^\s:][^\n:]{1,119}): [\d.,]+ [A-Z]{3}[ \t]*$'
+      flags: [m]
+      in: [text]
+event_keywords:
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: steam-purchase.eml
+    expect:
+      - ruleId: order-steam
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["712345678901234567"]
+        items: ["Example Space Game"]
+        trackingNumbers: []
+  - fixture: steam-market-purchase.eml
+    expect:
+      - ruleId: order-steam
+        event: order_confirmed
+        orderNumbers: ["612345678901234567-612345678901234568"]
+        items: ["Example Sticker | Gold"]

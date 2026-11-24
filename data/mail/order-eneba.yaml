@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-eneba
+name: Eneba orders (digital keys, no parcel)
+kind: order
+senders:
+  addresses: [customers@eneba.com]
+subject:
+  - "your order #?o-[a-z0-9]+"
+extract:
+  order_number:
+    - pattern: '(?:order (?:number:\s*|#))(?<order_number>o-[a-z0-9]{4,10})\b'
+  item:
+    - pattern: 'purchased products:(?:[ \t]*\n){1,3}[ \t]*(?<item>[^\s<][^\n<]{1,119})'
+      in: [text]
+event_keywords:
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: eneba-order.eml
+    expect:
+      - ruleId: order-eneba
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["o-ab12c"]
+        items: ["Example Shooter Steam Key GLOBAL"]

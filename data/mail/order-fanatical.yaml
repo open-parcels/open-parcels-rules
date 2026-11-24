@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-fanatical
+name: Fanatical orders (digital keys, no parcel)
+kind: order
+senders:
+  addresses: [info@mailer.fanatical.com]
+subject:
+  - "thank you for your fanatical order"
+extract:
+  order_number:
+    - pattern: 'order number:\s*(?<order_number>[0-9a-f]{24})\b'
+    - pattern: 'fanatical\.com/orders/(?<order_number>[0-9a-f]{24})\b'
+  item:
+    - pattern: '^(?<item>[^\s<][^\n<]{1,119}?)[ \t]*(?:[ \t]*\n){1,3}quantity:'
+      flags: [i, m]
+event_keywords:
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: fanatical-order.eml
+    expect:
+      - ruleId: order-fanatical
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["0123456789abcdef01234567"]
+        items: ["Example Parkour Game"]

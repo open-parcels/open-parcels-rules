@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-gamivo
+name: GAMIVO orders (digital keys, no parcel)
+kind: order
+senders:
+  addresses: [gamivo@gamivo.com, noreply@gamivo.com]
+subject:
+  - "^order (?:confirmation|completed|success)"
+extract:
+  order_number:
+    - pattern: '(?<order_number>\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b)'
+  item:
+    - pattern: 'purchased products:(?:[ \t]*\n){1,3}(?<item>[^\s<][^\n<]{1,119})'
+      in: [text]
+    - pattern: 'is now completed\.(?:[ \t]*\n){1,3}(?<item>[^\s<][^\n<]{1,119})'
+      in: [text]
+event_keywords:
+  - event: order_delivered
+    patterns: ["completed|success"]
+    in: [subject]
+  - event: order_confirmed
+    patterns: ["confirmation"]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: gamivo-order-confirmation.eml
+    expect:
+      - ruleId: order-gamivo
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["0f1e2d3c-4b5a-11ee-a000-0123456789ab"]
+        items: ["Example Tabletop Game"]
+  - fixture: gamivo-order-completed.eml
+    expect:
+      - ruleId: order-gamivo
+        event: order_delivered
+        orderNumbers: ["0f1e2d3c-4b5a-11ee-a000-0123456789ab"]
+        items: ["Example Tabletop Game"]

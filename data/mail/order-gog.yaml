@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-gog
+name: GOG.com order receipts (digital, no parcel)
+kind: order
+senders:
+  addresses: [do_not_reply@gog.com, do_not_reply@email.gog.com, do-not-reply@email.gog.com]
+subject:
+  - "your order #?[0-9a-f]{8,16} is complete|ihre bestellung"
+extract:
+  order_number:
+    - pattern: 'order(?: id:)? #(?<order_number>[0-9a-f]{8,16})\b'
+  item:
+    - pattern: '^\s*\d+\.\s+(?<item>[^\n]{2,100}?)\s+--\s'
+      flags: [i, m]
+      in: [text]
+event_keywords:
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: gog-order.eml
+    expect:
+      - ruleId: order-gog
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["0a1b2c3d4e5f"]
+        items: ["Example Dungeon Crawler"]

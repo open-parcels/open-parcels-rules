@@ -1,0 +1,19 @@
+From: "GAMIVO.com" <gamivo@gamivo.com>
+To: erika.mustermann@example.com
+Subject: Order confirmation [0f1e2d3c-4b5a-11ee-a000-0123456789ab]
+Date: Thu, 12 Nov 2026 17:30:00 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p>Order confirmation</p>
+<p>Thank you for your purchase!</p>
+<p>Details:</p>
+<p>Order ID:</p>
+<p>0f1e2d3c-4b5a-11ee-a000-0123456789ab</p>
+<p>Total value:</p>
+<p>EUR 3.26</p>
+<p>Purchased products:</p>
+<p>Example Tabletop Game</p>
+<p>EUR 2.07</p>
+</body></html>

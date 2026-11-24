@@ -1,0 +1,23 @@
+From: Humble Bundle <contact@humblebundle.com>
+To: erika.mustermann@example.com
+Subject: Your Humble Store order is ready
+Date: Sun, 15 Nov 2026 20:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset=utf-8
+
+Thank you for your Example Puzzle Game order. You can access it via your download page:
+  https://www.humblebundle.com/?key=AbCdEfGh12345678&guard=EXAMPLE
+
+Please save this email so that you can access your content again in the future.
+
+--b1
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<p><a href="https://www.humblebundle.com/?key=AbCdEfGh12345678&amp;guard=EXAMPLE">Download Now</a></p>
+<p>Contact our support if you have any issues and refer to transaction ID QWERTY2345ABC.</p>
+</body></html>
+--b1--

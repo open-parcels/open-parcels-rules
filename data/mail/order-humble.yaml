@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-humble
+name: Humble Bundle and Humble Store orders (digital, no parcel)
+kind: order
+senders:
+  addresses: [noreply@humblebundle.com, contact@humblebundle.com]
+subject:
+  - "your humble (?:bundle|store) order is ready|your humble bundle key"
+extract:
+  order_number:
+    # The order key from the download link; PayPal receipts quote the transaction id instead.
+    - pattern: 'humblebundle\.com/(?:downloads)?\?key=(?<order_number>[A-Za-z0-9]{16})\b'
+    - pattern: '[Tt]ransaction (?:ID|id):?\s*(?<order_number>[A-Z0-9]{10,16})\b'
+      flags: []
+      in: [text, html]
+  item:
+    - pattern: 'thank you for your (?<item>[^\n]{2,100}?) order\b'
+    - pattern: 'claimed a free copy of (?:the )?(?<item>[^\n]{2,100}?) from humble'
+event_keywords:
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: humble-store-order.eml
+    expect:
+      - ruleId: order-humble
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["AbCdEfGh12345678", "QWERTY2345ABC"]
+        items: ["Example Puzzle Game"]
