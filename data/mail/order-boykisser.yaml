@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../schema/mail-rule.schema.json
+id: order-boykisser
+name: Boykisser.gg card orders (printed in runs, shipped later)
+kind: order
+senders:
+  domains: [boykisser.gg]
+subject:
+  - "order is confirmed"
+extract:
+  # What the order costs in total ("total 21.50 USD" in the plain part).
+  total:
+    - pattern: '\btotal\s+(?<total>(?:[€$£]|EUR|USD|GBP)?[ \t]?\d[\d.,]*(?:[ \t]?(?:[€$£]|EUR|USD|GBP)){0,2})'
+  order_number:
+    - pattern: 'order\s+#(?<order_number>[A-Z0-9]{6})\b'
+      in: [subject, text]
+  # The HTML table's "Card" row: the card and its options, then "×<quantity>".
+  item:
+    - pattern: '^\s*card\s+(?<item>[^\n×]{1,120}?)\s*×\s*\d'
+      flags: [i, m]
+      in: [html]
+event_keywords:
+  - event: order_confirmed
+    patterns: ["."]
+    in: [subject]
+require: [order_number]
+tests:
+  - fixture: boykisser-order.eml
+    expect:
+      - ruleId: order-boykisser
+        kind: order
+        event: order_confirmed
+        orderNumbers: ["A1B2C3"]
+        items: ["Example Classic Light + Example Paw flag"]
+        total: { amount: 21.5, currency: USD }

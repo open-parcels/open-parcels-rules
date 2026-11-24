@@ -1,0 +1,32 @@
+From: "Boykisser.gg" <noreply@boykisser.gg>
+To: erika.mustermann@example.com
+Subject: Your Boykisser.gg order is confirmed (#A1B2C3)
+Date: Thu, 05 Nov 2026 13:01:18 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset=utf-8
+
+Thanks for your order! Order #A1B2C3 — Example Classic Light + Example Paw flag ×1, total 21.50 USD, charged 21.50 USD. Your card is in run 2. It goes to print once run 1 is out the door (expected early December). Changed your mind? You can cancel for a full refund, including shipping, any time before we start printing — email support@example.com with your order number. Refund Policy: https://boykisser.gg/refunds
+
+--b1
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<h1>Your order is confirmed! 🎉</h1>
+<p>Thanks for your order! Payment received.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+<tr><td>Order</td><td>#A1B2C3</td></tr>
+<tr><td>Card</td><td>Example Classic Light + Example Paw flag ×1</td></tr>
+<tr><td>Order total</td><td>21.50 USD</td></tr>
+<tr><td>Charged</td><td>21.50 USD</td></tr>
+<tr><td>License</td><td>BK-0000001</td></tr>
+<tr><td>Total cards</td><td>1</td></tr>
+</table>
+<p>Shipping to</p>
+<p>Erika Mustermann<br>Musterstraße 1<br>12345 Musterstadt<br>DE</p>
+<p>Your card is in run 2. It goes to print once run 1 is out the door (expected early December).</p>
+<p>© 2026 Boykisser.gg. All rights reserved.</p>
+</body></html>
+--b1--
