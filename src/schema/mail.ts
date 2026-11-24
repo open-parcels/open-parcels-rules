@@ -10,6 +10,7 @@ export const MAIL_EVENTS = [
   "order_placed",
   "order_confirmed",
   "order_shipped",
+  "order_delivered",
   "order_cancelled",
   "return_started",
   "return_received",

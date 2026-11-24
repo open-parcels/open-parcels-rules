@@ -48,7 +48,8 @@ tests:
   and a number that also appears as an order number is dropped.
 - `arrival` texts are parsed with all locales against the mail's `Date`; a timed window wins
   over a whole day. Without a mail date there is no arrival.
-- Events: `order_placed`, `order_confirmed`, `order_shipped`, `order_cancelled`,
+- Events: `order_placed`, `order_confirmed`, `order_shipped`, `order_delivered` (the shop
+  says the order arrived, without a tracking number), `order_cancelled`,
   `return_started`, `return_received`, `refund_issued`, `return_rejected`,
   `payment_reminder`, `payment_warning`, `debt_collection`.
 
@@ -82,7 +83,9 @@ Every number found by format detection (the fallback and `detect_tracking_number
 
 - sit in a tracking context: a tracking keyword from the locale tables on its line or the line
   above, a parcel noun ("Sendung", "shipment", "paczka") on its line, or a tracking link
-  around it;
+  around it. Inside a link it counts only as a whole query value or path segment of a
+  tracking link (`?piececode=<n>`, `/track/<n>`); a number that only appears inside other
+  links, or inside a longer token such as `id_202601191820_1`, is not evidence;
 - fit the carrier's `tracking_number_pattern` where `carriers.yaml` gives one;
 - not be a placeholder: one character repeated, or only 0s and 9s (optionally followed by one
   check digit).

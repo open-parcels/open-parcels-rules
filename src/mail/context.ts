@@ -50,10 +50,28 @@ export function isKnownSender(rules: Rules, domain: string): boolean {
   );
 }
 
+/**
+ * The number is a whole value or path segment of a tracking link (`?piececode=<n>&`,
+ * `/track/<n>`), not a piece of a longer token such as a timestamp in `id_202601191820_1`.
+ */
 function inTrackingUrl(line: string, number: string): boolean {
-  return Array.from(line.matchAll(URL), (match) => match[0]).some(
-    (url) => compact(url).includes(number) && TRACKING_PATH.test(url),
-  );
+  return Array.from(line.matchAll(URL), (match) => match[0]).some((url) => {
+    if (!TRACKING_PATH.test(url)) return false;
+    const link = compact(url);
+    let at = link.indexOf(number);
+    while (at >= 0) {
+      const before = at === 0 ? "" : link.charAt(at - 1);
+      const after = link.charAt(at + number.length);
+      if (/^[=/:]?$/u.test(before) && /^[&/#?;.]?$/u.test(after)) return true;
+      at = link.indexOf(number, at + 1);
+    }
+    return false;
+  });
+}
+
+/** The line with every link removed: numbers inside links count only via inTrackingUrl. */
+function withoutLinks(line: string): string {
+  return line.replace(URL, " ");
 }
 
 /** True when the number sits next to a tracking keyword or inside a tracking link. */
@@ -63,6 +81,7 @@ export function inTrackingContext(rules: Rules, body: string, trackingNumber: st
   return lines.some((line, index) => {
     if (!compact(line).includes(number)) return false;
     if (inTrackingUrl(line, number)) return true;
+    if (!compact(withoutLinks(line)).includes(number)) return false;
     if (PARCEL_NOUN.test(line)) return true;
     const window = lines.slice(Math.max(0, index - LINES_BEFORE), index + 1).join("\n");
     return rules.trackingKeywords.test(window);
