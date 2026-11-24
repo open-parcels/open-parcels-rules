@@ -1,8 +1,8 @@
 import type { PARCEL_STATUSES } from "./schema/common.ts";
-import type { MailEvent, MailKind } from "./schema/mail.ts";
+import type { EmailEvent, EmailKind } from "./schema/mail.ts";
 
 export type ParcelStatus = (typeof PARCEL_STATUSES)[number];
-export type { MailEvent, MailKind };
+export type { EmailEvent, EmailKind };
 
 export interface CarrierInfo {
   readonly id: string;
@@ -92,7 +92,7 @@ export interface ArrivalOptions {
   readonly locales?: readonly string[];
 }
 
-export interface MailInput {
+export interface EmailInput {
   /** The From header, either "addr@example.com" or "Name <addr@example.com>". */
   readonly from: string;
   readonly subject: string;
@@ -110,16 +110,16 @@ export interface Money {
   readonly currency: string;
 }
 
-export interface MailParseResult {
+export interface EmailParseResult {
   /** Mail rule id, "schema.org" for embedded ParcelDelivery data, or "fallback". */
   readonly ruleId: string;
-  readonly kind: MailKind;
+  readonly kind: EmailKind;
   readonly carrier?: string;
   readonly trackingNumbers: readonly string[];
   readonly orderNumbers: readonly string[];
   readonly status?: ParcelStatus;
   /** For order, return and dunning mails: what happened. */
-  readonly event?: MailEvent;
+  readonly event?: EmailEvent;
   readonly arrival?: ArrivalWindow;
   readonly items?: readonly string[];
   readonly trackingUrl?: string;

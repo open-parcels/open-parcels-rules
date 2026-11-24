@@ -38,7 +38,7 @@ require: [tracking_number]        # no result without these fields
 tests:
   - fixture: dhl-de-today.eml     # under test/fixtures/mail/
     time_zone: Europe/Berlin
-    expect:                       # subset match against parseMail's results, in order
+    expect:                       # subset match against parseEmail's results, in order
       - { ruleId: parcel-dhl, status: out_for_delivery, trackingNumbers: ["340011223348"] }
 ```
 

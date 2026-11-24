@@ -1,7 +1,7 @@
 import { compileDataRegex } from "../portability.ts";
 import type { RegexFlag, RegexLike } from "../schema/common.ts";
 import { toRegexSpec } from "../schema/common.ts";
-import type { MailEvent, MailField, MailKind, MailRule, MailPart } from "../schema/mail.ts";
+import type { EmailEvent, MailField, EmailKind, MailRule, MailPart } from "../schema/mail.ts";
 import type { ParcelStatus } from "../types.ts";
 
 export interface CompiledPattern {
@@ -12,7 +12,7 @@ export interface CompiledPattern {
 export interface CompiledMailRule {
   readonly id: string;
   readonly name: string;
-  readonly kind: MailKind;
+  readonly kind: EmailKind;
   readonly addresses: ReadonlySet<string>;
   readonly domains: readonly string[];
   /** Lower-cased local parts a domain match must also have; null for any. */
@@ -22,7 +22,7 @@ export interface CompiledMailRule {
   readonly body: readonly RegExp[] | null;
   readonly extract: ReadonlyMap<MailField, readonly CompiledPattern[]>;
   readonly statusKeywords: readonly { status: ParcelStatus; patterns: CompiledPattern[] }[];
-  readonly eventKeywords: readonly { event: MailEvent; patterns: CompiledPattern[] }[];
+  readonly eventKeywords: readonly { event: EmailEvent; patterns: CompiledPattern[] }[];
   readonly defaultStatus: ParcelStatus | undefined;
   readonly carrier: string | undefined;
   readonly carrierFrom: boolean;

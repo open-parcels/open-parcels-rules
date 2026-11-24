@@ -2,20 +2,20 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROOT } from "../scripts/collect.ts";
-import { parseMail } from "../src/index.ts";
+import { parseEmail } from "../src/index.ts";
 import { isBoilerplateItem, isPlaceholder } from "../src/mail/context.ts";
 import { EXTRACTORS } from "../src/mail/extractors.ts";
 import { decodeEntities, htmlToText } from "../src/mail/html.ts";
 import { httpUrl, senderAddress } from "../src/mail/parse.ts";
 import { extractSchemaOrg } from "../src/mail/schema-org.ts";
-import type { MailInput } from "../src/types.ts";
+import type { EmailInput } from "../src/types.ts";
 import { parseEml } from "./helpers/eml.ts";
 import { testData, testRules } from "./helpers/rules.ts";
 
 const rules = testRules();
 const FIXTURES = join(ROOT, "test", "fixtures", "mail");
 
-function fixture(name: string, timeZone?: string, now?: string): MailInput {
+function fixture(name: string, timeZone?: string, now?: string): EmailInput {
   const mail = parseEml(readFileSync(join(FIXTURES, name), "utf8"), timeZone);
   return now === undefined ? mail : { ...mail, date: new Date(now) };
 }
@@ -25,7 +25,7 @@ describe("mail rule vectors", () => {
     describe(rule.id, () => {
       for (const test of rule.tests) {
         it(test.fixture, () => {
-          const results = parseMail(rules, fixture(test.fixture, test.time_zone, test.now));
+          const results = parseEmail(rules, fixture(test.fixture, test.time_zone, test.now));
           expect(results).toHaveLength(test.expect.length);
           test.expect.forEach((expected, index) => {
             expect(results[index]).toMatchObject(expected);
@@ -97,9 +97,9 @@ describe("mail rule data", () => {
   });
 });
 
-describe("parseMail beyond the rules", () => {
+describe("parseEmail beyond the rules", () => {
   it("reads schema.org ParcelDelivery JSON-LD", () => {
-    const results = parseMail(rules, fixture("schema-org-jsonld.eml"));
+    const results = parseEmail(rules, fixture("schema-org-jsonld.eml"));
     expect(results).toEqual([
       expect.objectContaining({
         ruleId: "schema.org",
@@ -119,7 +119,7 @@ describe("parseMail beyond the rules", () => {
   });
 
   it("reads schema.org ParcelDelivery microdata", () => {
-    const results = parseMail(rules, fixture("schema-org-microdata.eml"));
+    const results = parseEmail(rules, fixture("schema-org-microdata.eml"));
     expect(results).toEqual([
       expect.objectContaining({
         ruleId: "schema.org",
@@ -130,11 +130,11 @@ describe("parseMail beyond the rules", () => {
   });
 
   it("ignores a tracking number from a sender the rules do not know", () => {
-    expect(parseMail(rules, fixture("fallback-shop.eml"))).toEqual([]);
+    expect(parseEmail(rules, fixture("fallback-shop.eml"))).toEqual([]);
   });
 
   it("falls back to format detection for a carrier mail with a labelled number", () => {
-    const results = parseMail(rules, {
+    const results = parseEmail(rules, {
       from: "info@dhl.com",
       subject: "Shipment update",
       text: "Hello,\nTracking number: 00340434123456789012\n",
@@ -151,7 +151,7 @@ describe("parseMail beyond the rules", () => {
   });
 
   it("needs a tracking word or link next to a detected number", () => {
-    const results = parseMail(rules, {
+    const results = parseEmail(rules, {
       from: "info@dhl.com",
       subject: "Your invoice",
       text: "Hello,\nCustomer reference 00340434123456789012\n",
@@ -160,7 +160,7 @@ describe("parseMail beyond the rules", () => {
   });
 
   it("accepts a number inside a tracking link", () => {
-    const [result] = parseMail(rules, {
+    const [result] = parseEmail(rules, {
       from: "info@dhl.com",
       subject: "Shipment update",
       text: "See https://www.dhl.de/verfolgen.html?piececode=00340434123456789012\n",
@@ -169,7 +169,7 @@ describe("parseMail beyond the rules", () => {
   });
 
   it("ignores numbers that are only part of a longer link token", () => {
-    const results = parseMail(rules, {
+    const results = parseEmail(rules, {
       from: "info@dhl.com",
       subject: "Track your shipment",
       text:
@@ -181,7 +181,7 @@ describe("parseMail beyond the rules", () => {
   });
 
   it("accepts a whole link value next to a tracking word", () => {
-    const [result] = parseMail(rules, {
+    const [result] = parseEmail(rules, {
       from: "info@dhl.com",
       subject: "Shipment update",
       text: "Tracking number: http://nolp.dhl.de/nextt-online-public/set_identcodes.do?idc=00340434123456789012\n",
@@ -206,7 +206,7 @@ describe("parseMail beyond the rules", () => {
   });
 
   it("leaves unrelated mail alone", () => {
-    expect(parseMail(rules, fixture("unrelated-newsletter.eml"))).toEqual([]);
+    expect(parseEmail(rules, fixture("unrelated-newsletter.eml"))).toEqual([]);
   });
 
   it("reads the sender address from display-name forms", () => {
@@ -216,7 +216,7 @@ describe("parseMail beyond the rules", () => {
   });
 
   it("returns no arrival without a mail date to anchor relative days", () => {
-    const results = parseMail(rules, {
+    const results = parseEmail(rules, {
       from: "noreply@dhl.de",
       subject: "Ihr DHL Paket kommt heute",
       text: "Sendungsnummer: 00340434123456789012\nZustellung heute zwischen 14:00 und 18:00 Uhr",
@@ -233,7 +233,7 @@ function withinBudget(work: () => unknown, budget = 1000): void {
   expect(performance.now() - began).toBeLessThan(budget);
 }
 
-function jsonLdMail(from: string, delivery: Record<string, unknown>): MailInput {
+function jsonLdMail(from: string, delivery: Record<string, unknown>): EmailInput {
   const json = JSON.stringify({ "@context": "https://schema.org", ...delivery });
   return {
     from,
@@ -249,7 +249,7 @@ describe("hostile mail (RU-002 to RU-005)", () => {
     );
     expect(htmlToText("<p>Hi &#x110000;</p>")).toBe("Hi \uFFFD");
     expect(() =>
-      parseMail(rules, { from: "a@example.com", subject: "x", html: "&#x110000;" }),
+      parseEmail(rules, { from: "a@example.com", subject: "x", html: "&#x110000;" }),
     ).not.toThrow();
   });
 
@@ -260,7 +260,7 @@ describe("hostile mail (RU-002 to RU-005)", () => {
     const nested = `ParcelDelivery<script type="application/ld+json">{"@type":"ParcelDelivery","carrier":${deep}}</script>`;
     expect(() => extractSchemaOrg(nested)).not.toThrow();
     expect(() =>
-      parseMail(rules, { from: "notices@yodel.co.uk", subject: "x", html: nested }),
+      parseEmail(rules, { from: "notices@yodel.co.uk", subject: "x", html: nested }),
     ).not.toThrow();
   });
 
@@ -302,18 +302,18 @@ describe("hostile mail (RU-002 to RU-005)", () => {
   };
 
   it("ignores schema.org markup from senders the rules do not know", () => {
-    expect(parseMail(rules, jsonLdMail("spam@example.com", delivery))).toEqual([]);
+    expect(parseEmail(rules, jsonLdMail("spam@example.com", delivery))).toEqual([]);
   });
 
   it("drops non-http tracking URLs and placeholder numbers from schema.org markup", () => {
-    const [result] = parseMail(rules, jsonLdMail("notices@yodel.co.uk", delivery));
+    const [result] = parseEmail(rules, jsonLdMail("notices@yodel.co.uk", delivery));
     expect(result).toMatchObject({
       ruleId: "schema.org",
       trackingNumbers: ["00340434123456789012"],
     });
     expect(result?.trackingUrl).toBeUndefined();
     const placeholder = { ...delivery, trackingNumber: "0000000000" };
-    const [empty] = parseMail(rules, jsonLdMail("notices@yodel.co.uk", placeholder));
+    const [empty] = parseEmail(rules, jsonLdMail("notices@yodel.co.uk", placeholder));
     expect(empty?.trackingNumbers).toEqual([]);
   });
 });

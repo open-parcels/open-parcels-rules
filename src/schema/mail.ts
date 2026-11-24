@@ -79,7 +79,7 @@ const mailTestSchema = z.strictObject({
   time_zone: z.string().optional(),
   expect: z.array(z.record(z.string(), z.unknown())).meta({
     description:
-      "Expected results (subset match, in order) of parseMail for the fixture; [] means no result.",
+      "Expected results (subset match, in order) of parseEmail for the fixture; [] means no result.",
   }),
 });
 
@@ -136,7 +136,7 @@ export const mailRuleSchema = z.strictObject({
 
 export type MailRule = z.infer<typeof mailRuleSchema>;
 export type MailRuleInput = z.input<typeof mailRuleSchema>;
-export type MailKind = z.infer<typeof mailKindSchema>;
-export type MailEvent = z.infer<typeof mailEventSchema>;
+export type EmailKind = z.infer<typeof mailKindSchema>;
+export type EmailEvent = z.infer<typeof mailEventSchema>;
 export type MailField = z.infer<typeof mailFieldSchema>;
 export type MailPart = (typeof MAIL_PARTS)[number];

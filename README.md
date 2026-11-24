@@ -53,7 +53,7 @@ attempts, holds, damage and address issues; `returning` means on its way back to
 ## Using it from TypeScript
 
 ```ts
-import { loadRules, detectTrackingNumbers, mapStatus, parseArrival, parseMail } from "open-parcels-rules";
+import { loadRules, detectTrackingNumbers, mapStatus, parseArrival, parseEmail } from "open-parcels-rules";
 
 const rules = loadRules(); // reads and validates dist/bundle.json once
 
@@ -66,7 +66,7 @@ mapStatus(rules, "hermes", { code: "ZUGESTELLT_PAKETSHOP" });
 parseArrival(rules, "Zustellung heute 17h - 19h", { now: new Date(), timeZone: "Europe/Berlin" });
 // { from: "...T17:00:00+01:00", to: "...T19:00:00+01:00", allDay: false, matched: "Zustellung heute 17h - 19h" }
 
-parseMail(rules, { from: "noreply@dhl.de", subject: "Ihr DHL Paket kommt heute", text, date });
+parseEmail(rules, { from: "noreply@dhl.de", subject: "Ihr DHL Paket kommt heute", text, date });
 ```
 
 The full API, with every option, is in [`docs/consuming.md`](docs/consuming.md). Email results

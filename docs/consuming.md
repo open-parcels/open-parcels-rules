@@ -36,7 +36,7 @@ import {
   mapStatus,
   resolveStatus,
   parseArrival,
-  parseMail,
+  parseEmail,
 } from "open-parcels-rules";
 import type { Rules, ParcelStatus, CarrierInfo, TrackingCandidate } from "open-parcels-rules";
 ```
@@ -56,7 +56,7 @@ import type { Rules, ParcelStatus, CarrierInfo, TrackingCandidate } from "open-p
 | `pastDayOffset(rules, word, locales?)` | The offset (0 today, -1 yesterday) a standalone word names, or `undefined`. |
 | `resolveStatus(rules, carrier, latest, history)` | `{ status, source, unmapped }`; see below. |
 | `parseArrival(rules, text, { now, timeZone, locales? })` | `{ from, to, allDay, matched }` or `null`. |
-| `parseMail(rules, mail)` | An array of `MailParseResult`. |
+| `parseEmail(rules, mail)` | An array of `EmailParseResult`. |
 | `parseMoney(text, currency?)` | `{ amount, currency }` from a money text such as `€ 11,47` or `99.90EUR`, or `undefined`. |
 
 Additions to the contract: `rulesFromBundle`, `portabilityProblems(pattern)` (the regex-subset
@@ -90,7 +90,7 @@ a daylight-saving change carries two different offsets. Whole days end at the ne
 ### Emails
 
 ```ts
-parseMail(rules, {
+parseEmail(rules, {
   from: '"DHL Paket" <noreply@dhl.de>',
   subject: "Ihr DHL Paket kommt heute",
   text,                 // optional

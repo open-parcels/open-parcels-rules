@@ -5,7 +5,7 @@ import { grammarFor } from "../rules.ts";
 import type { MailField, MailPart } from "../schema/mail.ts";
 import { detect } from "../tracking/detect.ts";
 import { normalizeTrackingNumber } from "../tracking/validate.ts";
-import type { ArrivalWindow, MailInput, MailParseResult } from "../types.ts";
+import type { ArrivalWindow, EmailInput, EmailParseResult } from "../types.ts";
 import type { CompiledMailRule, CompiledPattern } from "./compile.ts";
 import {
   fitsCarrierPattern,
@@ -25,7 +25,7 @@ interface Prepared {
   readonly address: string;
   readonly domain: string;
   readonly parts: Parts;
-  readonly mail: MailInput;
+  readonly mail: EmailInput;
 }
 
 /** Confidence a number found by the fallback needs; below it the mail is left alone. */
@@ -45,7 +45,7 @@ export function senderAddress(from: string): string {
   return (bracketed ?? bare ?? from).trim().toLowerCase();
 }
 
-function prepare(mail: MailInput): Prepared {
+function prepare(mail: EmailInput): Prepared {
   const address = senderAddress(mail.from);
   const html = mail.html === undefined ? "" : htmlToText(mail.html);
   const text = mail.text ?? html;
@@ -90,7 +90,7 @@ function collectField(rule: CompiledMailRule, field: MailField, parts: Parts): s
 function arrivalFrom(
   rules: Rules,
   texts: readonly string[],
-  mail: MailInput,
+  mail: EmailInput,
 ): ArrivalWindow | undefined {
   if (mail.date === undefined) return undefined;
   const grammar = grammarFor(rules);
@@ -147,7 +147,7 @@ function applyRule(
   rules: Rules,
   rule: CompiledMailRule,
   prepared: Prepared,
-): MailParseResult | null {
+): EmailParseResult | null {
   const { parts } = prepared;
   const draft: Draft = {
     carrier: namedCarrier(rules, rule, parts),
@@ -219,7 +219,7 @@ function plausibleNumber(rules: Rules, number: string, carrier: string | undefin
   return fitsCarrierPattern(rules, candidate);
 }
 
-function schemaOrgResults(rules: Rules, prepared: Prepared): MailParseResult[] {
+function schemaOrgResults(rules: Rules, prepared: Prepared): EmailParseResult[] {
   // Like the fallback, only carriers and shops the rules know may announce a parcel by markup.
   if (!isKnownSender(rules, prepared.domain)) return [];
   return extractSchemaOrg(prepared.mail.html).map((delivery) => {
@@ -254,7 +254,7 @@ function arrivalFromIso(from: string | undefined, until: string): ArrivalWindow 
   return { from: start, to: until, allDay: false, matched: `${start}/${until}` };
 }
 
-function fallback(rules: Rules, prepared: Prepared): MailParseResult[] {
+function fallback(rules: Rules, prepared: Prepared): EmailParseResult[] {
   const { subject, text } = prepared.parts;
   const body = `${subject}\n${text}`;
   // Only carriers and shops the rules know may announce a parcel by a bare number.
@@ -279,17 +279,17 @@ function fallback(rules: Rules, prepared: Prepared): MailParseResult[] {
 }
 
 /** True when an `ignore` rule matches the mail's sender, subject and (if given) text. */
-export function isIgnoredMail(rules: Rules, mail: MailInput): boolean {
+export function isIgnoredEmail(rules: Rules, mail: EmailInput): boolean {
   const prepared = prepare(mail);
   return rules.mailRules.some((rule) => rule.kind === "ignore" && ruleApplies(rule, prepared));
 }
 
-export function parseMailWith(rules: Rules, mail: MailInput): MailParseResult[] {
+export function parseEmailWith(rules: Rules, mail: EmailInput): EmailParseResult[] {
   const prepared = prepare(mail);
   const applying = rules.mailRules.filter((rule) => ruleApplies(rule, prepared));
   // Account, developer-portal and newsletter mails never describe a parcel.
   if (applying.some((rule) => rule.kind === "ignore")) return [];
-  const results: MailParseResult[] = [];
+  const results: EmailParseResult[] = [];
   for (const rule of applying) {
     const result = applyRule(rules, rule, prepared);
     if (result !== null) results.push(result);

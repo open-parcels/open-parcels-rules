@@ -6,14 +6,14 @@ import {
   loadRules,
   mapStatus,
   parseArrival,
-  parseMail,
+  parseEmail,
   resolveStatus,
   trackingUrl,
 } from "../../dist/index.js";
 import type {
   ArrivalWindow,
   CarrierInfo,
-  MailParseResult,
+  EmailParseResult,
   ParcelStatus,
   Rules,
   TrackingCandidate,
@@ -30,6 +30,6 @@ const window: ArrivalWindow | null = parseArrival(rules, "heute", {
   now: new Date(),
   timeZone: "UTC",
 });
-const mails: MailParseResult[] = parseMail(rules, { from: "a@b.c", subject: "s" });
+const mails: EmailParseResult[] = parseEmail(rules, { from: "a@b.c", subject: "s" });
 
 export const used = [all, dhl, url, found, status, resolved, window, mails];

@@ -496,7 +496,7 @@
               },
               "additionalProperties": {}
             },
-            "description": "Expected results (subset match, in order) of parseMail for the fixture; [] means no result."
+            "description": "Expected results (subset match, in order) of parseEmail for the fixture; [] means no result."
           }
         },
         "required": [

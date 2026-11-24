@@ -1,6 +1,6 @@
 import type { IgnoreEntry, StatusEntry, StatusFile, StatusMatch } from "./schema/status.ts";
 import { compileDataRegex } from "./portability.ts";
-import type { MailEvent, MappedStatus, RawStatus, ResolvedStatus } from "./types.ts";
+import type { EmailEvent, MappedStatus, RawStatus, ResolvedStatus } from "./types.ts";
 
 /** Entries of one kind (status entries or ignore entries), indexed for matching. */
 export interface CompiledMatcher<E> {
@@ -114,7 +114,7 @@ export function mapWithTable(table: CompiledStatusTable, raw: RawStatus): Mapped
 }
 
 /** The event an `ignore` entry gives a raw value, or null when none matches. */
-export function ignoredWithTable(table: CompiledStatusTable, raw: RawStatus): MailEvent | null {
+export function ignoredWithTable(table: CompiledStatusTable, raw: RawStatus): EmailEvent | null {
   return findEntry(table.ignore, raw)?.event ?? null;
 }
 

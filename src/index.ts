@@ -1,7 +1,7 @@
 import { parseWithGrammar } from "./arrival/parse.ts";
 import { buildTrackingUrl, lookupCarrier } from "./carriers.ts";
 import { fitsCarrierPattern, isBoilerplateItem, isPlaceholder } from "./mail/context.ts";
-import { isIgnoredMail, parseMailWith } from "./mail/parse.ts";
+import { isIgnoredEmail, parseEmailWith } from "./mail/parse.ts";
 import type { Rules } from "./rules.ts";
 import { grammarFor, keyId } from "./rules.ts";
 import { ignoredWithTable, mapWithTable, resolveWithTable } from "./status.ts";
@@ -12,9 +12,9 @@ import type {
   CarrierInfo,
   CarrierKey,
   DetectHints,
-  MailEvent,
-  MailInput,
-  MailParseResult,
+  EmailEvent,
+  EmailInput,
+  EmailParseResult,
   MappedStatus,
   RawStatus,
   ResolvedStatus,
@@ -80,7 +80,7 @@ export function mapStatus(rules: Rules, carrier: string, raw: RawStatus): Mapped
  * The event an `ignore` entry of the carrier's table gives a raw value (an order line that was
  * cancelled, refunded or returned is no parcel), or null when none matches.
  */
-export function ignoredStatus(rules: Rules, carrier: string, raw: RawStatus): MailEvent | null {
+export function ignoredStatus(rules: Rules, carrier: string, raw: RawStatus): EmailEvent | null {
   const id = lookupCarrier(rules.carriers, carrier)?.id ?? carrier;
   const table = rules.statusTables.get(id);
   return table === undefined ? null : ignoredWithTable(table, raw);
@@ -156,7 +156,7 @@ export function parseArrival(
  * not a placeholder (runs of 0 or 9, one digit repeated) and fitting the carrier's number
  * pattern where carriers.yaml lists one. For re-checking parcels that mails created earlier.
  */
-export function plausibleMailTrackingNumber(
+export function plausibleEmailTrackingNumber(
   rules: Rules,
   carrier: string,
   trackingNumber: string,
@@ -180,11 +180,11 @@ export function isBoilerplateItemTitle(title: string): boolean {
 }
 
 /** True when an `ignore` mail rule drops a mail with this sender and subject. */
-export function ignoredMail(rules: Rules, from: string, subject: string): boolean {
-  return isIgnoredMail(rules, { from, subject });
+export function ignoredEmail(rules: Rules, from: string, subject: string): boolean {
+  return isIgnoredEmail(rules, { from, subject });
 }
 
 /** Every rule result for a mail; a format-detection fallback when no rule applies. */
-export function parseMail(rules: Rules, mail: MailInput): MailParseResult[] {
-  return parseMailWith(rules, mail);
+export function parseEmail(rules: Rules, mail: EmailInput): EmailParseResult[] {
+  return parseEmailWith(rules, mail);
 }

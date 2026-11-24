@@ -2,7 +2,7 @@
  * A small RFC 5322 / MIME reader for the test fixtures: headers with RFC 2047 encoded words,
  * multipart bodies, quoted-printable and base64. Enough for hand-written fixtures, no more.
  */
-import type { MailInput } from "../../src/types.ts";
+import type { EmailInput } from "../../src/types.ts";
 
 interface Part {
   readonly headers: ReadonlyMap<string, string>;
@@ -82,7 +82,7 @@ function collectParts(part: Part, out: { text?: string; html?: string }): void {
   else if (type.startsWith("text/plain")) out.text ??= decodeBody(part);
 }
 
-export function parseEml(raw: string, timeZone?: string): MailInput {
+export function parseEml(raw: string, timeZone?: string): EmailInput {
   const root = splitHead(raw);
   const body: { text?: string; html?: string } = {};
   collectParts(root, body);
