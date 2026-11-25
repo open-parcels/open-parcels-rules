@@ -11,9 +11,12 @@ import type { TrackingCandidate } from "../types.ts";
 /** Lines above a number that may hold its label ("Sendungsnummer:" on its own line). */
 const LINES_BEFORE = 1;
 const URL = /https?:\/\/[^\s"<>]+/giu;
-/** "Ihre Sendung 0912…", "Your shipment LX…": a parcel noun on the number's own line. */
+/**
+ * "Ihre Sendung 0912…", "Your shipment LX…": a parcel noun on the number's own line. Plurals
+ * count too: "Ihre Sendungen A und B", "Your shipments A and B" name several numbers at once.
+ */
 const PARCEL_NOUN =
-  /(?<!\p{L})(?:sendung|paket|shipment|parcel|package|paczk[aię]|przesyłk[aię]|colis|pacco|spedizione|envío|zending|pakket)(?!\p{L})/iu;
+  /(?<!\p{L})(?:sendung(?:en)?|paket(?:e|en)?|shipments?|parcels?|packages?|paczk[aię]|przesyłk[aię]|colis|pacc(?:o|hi)|spedizion[ei]|envíos?|zending(?:en)?|pakket(?:ten)?)(?!\p{L})/iu;
 const TRACKING_PATH = /track|verfolg|sendung|parcel|paket|shipment|status/iu;
 
 /** Bullet lines that are instructions, not item names. */

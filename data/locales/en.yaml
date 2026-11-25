@@ -69,14 +69,22 @@ cut_markers:
   - "was expected"
 tracking_keywords:
   - tracking number
+  - tracking numbers
   - tracking no
   - tracking id
+  - tracking ids
   - tracking code
+  - tracking codes
   - track your package
+  - track your packages
   - track your parcel
+  - track your parcels
   - shipment number
+  - shipment numbers
   - parcel number
+  - parcel numbers
   - consignment number
+  - consignment numbers
 tests:
   # Whole days.
   - {

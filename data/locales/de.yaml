@@ -73,10 +73,14 @@ cut_markers:
   - "bisher erwartet"
 tracking_keywords:
   - sendungsnummer
+  - sendungsnummern
   - sendungsverfolgung
   - paketnummer
+  - paketnummern
   - trackingnummer
+  - trackingnummern
   - tracking-nummer
+  - tracking-nummern
   - paketverfolgung
   - sendungs-id
   - sendungsnr

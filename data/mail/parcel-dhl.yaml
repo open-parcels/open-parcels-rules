@@ -28,12 +28,17 @@ status_keywords:
   - status: problem
     patterns: ["nicht zugestellt werden|zustellversuch|could not be delivered|delivery attempt"]
   - status: delivered
-    patterns: ["wurde zugestellt|zugestellt am|has been delivered|została doręczona"]
+    patterns: ["wurden? zugestellt|zugestellt am|ha(?:s|ve) been delivered|została doręczona"]
   - status: out_for_delivery
     patterns:
-      ["kommt heute|wird heute zugestellt|in zustellung|scheduled for delivery today|zostanie dziś"]
+      [
+        "komm(?:t|en) heute|(?:wird|werden) heute zugestellt|in zustellung|scheduled for delivery today|zostanie dziś",
+      ]
   - status: in_transit
-    patterns: ["kommt (?:morgen|bald|am)|ist unterwegs|paketankündigung|on its way|w drodze"]
+    patterns:
+      [
+        "komm(?:t|en) (?:morgen|bald|am)|(?:ist|sind) unterwegs|paketankündigung|on (?:its|their) way|w drodze",
+      ]
 require: [tracking_number]
 tests:
   - fixture: dhl-de-announcement.eml
@@ -73,3 +78,22 @@ tests:
       - ruleId: parcel-dhl
         trackingNumbers: ["00340434987654321012"]
         status: delivered
+  - fixture: dhl-de-multiple.eml
+    expect:
+      - ruleId: parcel-dhl
+        carrier: dhl
+        trackingNumbers:
+          [
+            "00340434111111111117",
+            "00340434222222222224",
+            "00340434333333333331",
+            "00340434121212121212",
+            "00340434123456789012",
+          ]
+        status: in_transit
+  - fixture: dhl-com-multiple.eml
+    expect:
+      - ruleId: parcel-dhl
+        carrier: dhl
+        trackingNumbers: ["LX123123120DE", "00340434111111111117", "00340434222222222224"]
+        status: in_transit

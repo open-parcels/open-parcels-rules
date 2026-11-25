@@ -90,7 +90,8 @@ Add another only when data cannot do the job, and document it here.
 Every number found by format detection (the fallback and `detect_tracking_numbers`) must also:
 
 - sit in a tracking context: a tracking keyword from the locale tables on its line or the line
-  above, a parcel noun ("Sendung", "shipment", "paczka") on its line, or a tracking link
+  above, a parcel noun ("Sendung", "shipment", "paczka", or a plural such as "Sendungen" and
+  "shipments", so "Ihre Sendungen A und B" yields both) on its line, or a tracking link
   around it. Inside a link it counts only as a whole query value or path segment
   (`?piececode=<n>`, `/track/<n>`), never as part of a longer token such as the campaign
   timestamp in `id_202601191820_1`;
