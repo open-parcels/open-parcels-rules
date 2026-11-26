@@ -17,6 +17,8 @@ import {
 import { EXTRACTORS } from "./extractors.ts";
 import { htmlToText } from "./html.ts";
 import { parseMoney } from "./money.ts";
+import { genericReturn } from "./generic-return.ts";
+import { readReturn, returnItems, lines } from "./returns.ts";
 import { extractSchemaOrg } from "./schema-org.ts";
 
 type Parts = Readonly<Record<MailPart, string>>;
@@ -162,7 +164,13 @@ function applyRule(
   // A 14-digit order number also looks like a 14-digit parcel number; the label decides.
   const orders = new Set(orderNumbers.map(normalizeTrackingNumber));
   draft.trackingNumbers = draft.trackingNumbers.filter((number) => !orders.has(number));
-  const items = collectField(rule, "item", parts).filter((item) => !isBoilerplateItem(item));
+  const ruleItems = collectField(rule, "item", parts).filter((item) => !isBoilerplateItem(item));
+  // A return email that lists no item in the rule's way may name it on an "Item:" line.
+  const items =
+    ruleItems.length > 0 || rule.kind !== "return"
+      ? ruleItems
+      : returnItems(parts.subject, lines(parts.text));
+  const shop = collectField(rule, "shop", parts)[0];
   const trackingUrl = httpUrl(
     collectField(rule, "tracking_url", parts)[0]?.replace(TRAILING_URL_PUNCTUATION, ""),
   );
@@ -184,6 +192,7 @@ function applyRule(
     arrival: arrival !== undefined,
     carrier: draft.carrier !== undefined,
     total: total !== undefined,
+    shop: shop !== undefined,
   };
   if (!rule.require.every((field) => present[field])) return null;
   const anything =
@@ -202,6 +211,10 @@ function applyRule(
     ...(trackingUrl === undefined ? {} : { trackingUrl }),
     ...(pickupCode === undefined ? {} : { pickupCode }),
     ...(total === undefined ? {} : { total }),
+    ...(shop === undefined ? {} : { shop }),
+    ...(rule.kind === "return"
+      ? { return: readReturn(rules, prepared.mail, parts.text, event) }
+      : {}),
   };
 }
 
@@ -295,5 +308,7 @@ export function parseEmailWith(rules: Rules, mail: EmailInput): EmailParseResult
     if (result !== null) results.push(result);
   }
   results.push(...schemaOrgResults(rules, prepared));
-  return results.length > 0 ? results : fallback(rules, prepared);
+  if (results.length > 0) return results;
+  const generic = genericReturn(rules, prepared.mail, prepared.parts);
+  return generic === null ? fallback(rules, prepared) : [generic];
 }

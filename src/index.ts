@@ -28,6 +28,7 @@ export type { MailRuleInput as EmailRuleDefinition } from "./schema/mail.ts";
 export { portabilityProblems } from "./portability.ts";
 export { PARCEL_STATUSES } from "./schema/common.ts";
 export { parseMoney } from "./mail/money.ts";
+export { GENERIC_RETURN_RULE } from "./mail/generic-return.ts";
 export type { Rules } from "./rules.ts";
 export type * from "./types.ts";
 

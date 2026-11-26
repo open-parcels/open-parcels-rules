@@ -34,6 +34,7 @@ export const MAIL_FIELDS = [
   "arrival",
   "carrier",
   "total",
+  "shop",
 ] as const;
 export const mailFieldSchema = z.enum(MAIL_FIELDS);
 

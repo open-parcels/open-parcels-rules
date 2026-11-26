@@ -1,0 +1,23 @@
+From: "service@paypal.de" <service@paypal.de>
+To: erika.mustermann@example.com
+Subject: You have a refund from www.example-games.com
+Date: Sat, 17 Oct 2026 02:49:56 -0700
+Content-Type: text/plain; charset=utf-8
+
+You have a refund from www.example-games.com
+www.example-games.com sent you a refund of 13,99 € EUR.
+Hello, Erika Mustermann
+www.example-games.com refunded 13,99 € EUR from your purchase on 17 October 2026
+
+Your refund summary
+Transaction ID
+1AB23456CD7890123
+Total purchase amount
+13,99 € EUR
+Amount refunded
+13,99 € EUR
+Refund paid by
+www.example-games.com
+Invoice ID: 712345678901234567
+Refund paid to
+Erika Mustermann

@@ -195,7 +195,8 @@
           "item",
           "arrival",
           "carrier",
-          "total"
+          "total",
+          "shop"
         ]
       },
       "additionalProperties": {
@@ -464,7 +465,8 @@
           "item",
           "arrival",
           "carrier",
-          "total"
+          "total",
+          "shop"
         ]
       }
     },

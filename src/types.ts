@@ -130,4 +130,58 @@ export interface EmailParseResult {
   readonly pickupCode?: string;
   /** What the order costs in total, as the email states it. */
   readonly total?: Money;
+  /**
+   * The shop (or seller) the email names as the one paid, in its own words; payment services'
+   * refund emails name no order number, but the payee and the amount paid.
+   */
+  readonly shop?: string;
+  /** For return results: what the email says about the return. */
+  readonly return?: ReturnDetails;
+}
+
+/** How far a return is. */
+export type ReturnStatus =
+  | "requested"
+  | "label_created"
+  | "dropped_off"
+  | "in_transit"
+  | "received"
+  | "refunded"
+  | "rejected"
+  | "cancelled";
+
+/** Where a return may be handed in. `any`: any shop or point of the carrier. */
+export type DropOffKind = "shop" | "parcel_locker" | "post_office" | "pickup" | "any";
+
+export interface DropOffOption {
+  /** Carrier id, when the option names one. */
+  readonly carrier?: string;
+  readonly kind: DropOffKind;
+  /** The shop's own words, e.g. "Any DHL drop-off". */
+  readonly description: string;
+}
+
+/** Whether sending a return back is free, or what it costs. */
+export interface ReturnCost {
+  readonly free: boolean;
+  readonly amount?: number;
+  readonly currency?: string;
+}
+
+/** What a return or refund email says beyond its rule's fields (`src/mail/returns.ts`). */
+export interface ReturnDetails {
+  readonly status?: ReturnStatus;
+  /** The shop's own id of the return. */
+  readonly returnId?: string;
+  readonly reason?: string;
+  /** The last day to hand the return in, a local `YYYY-MM-DD` day. */
+  readonly returnBy?: string;
+  readonly dropOff: readonly DropOffOption[];
+  readonly cost?: ReturnCost;
+  /** The money paid back, or to be. */
+  readonly refund?: Money;
+  /** The label or QR-code page. */
+  readonly labelUrl?: string;
+  /** The email speaks of a return (not only of money back for a cancelled order). */
+  readonly aboutReturn: boolean;
 }

@@ -7,6 +7,20 @@ senders:
   local_parts: [service]
 subject:
   - "refund from|rückzahlung von|erstattung von|zwrot pieniędzy od|zwrot od|remboursement de|rimborso da"
+extract:
+  # The shop's own reference, as on PayPal's payment receipts (order-paypal); PayPal's own
+  # transaction id is never taken.
+  order_number:
+    - pattern: '(?:invoice id|rechnungsnummer|rechnungs-id)\s*:?\s*(?<order_number>[A-Za-z_-]{0,10}\d[A-Za-z0-9_-]{1,28})\b'
+  # What the purchase cost (not the refund): an email without a reference is matched to its
+  # order by this amount and the payee.
+  total:
+    - pattern: '(?:total purchase amount|gesamtbetrag des kaufs)\s*:?\s*(?<total>\d[\d.,]*[ \t]?(?:[€$£]|EUR|USD|GBP)(?:[ \t]?(?:EUR|USD|GBP))?)'
+    - pattern: '(?:you originally paid|sie haben ursprünglich)[^\n]{1,80}?[ \t](?<total>\d[\d.,]*[ \t]?(?:[€$£]|EUR|USD|GBP)(?:[ \t]?(?:EUR|USD|GBP))?)'
+  # The payee: the shop or seller that paid the money back.
+  shop:
+    - pattern: '(?:refund from|rückzahlung von|erstattung von)\s+(?<shop>[^\n]{2,80}?)(?:\s+is on the way|\s+ist unterwegs)?$'
+      in: [subject]
 event_keywords:
   - event: refund_issued
     patterns: ["."]
@@ -19,3 +33,21 @@ tests:
         event: refund_issued
         trackingNumbers: []
         orderNumbers: []
+        shop: Beispiel-Shop
+        return: { status: refunded }
+  - fixture: paypal-refund-invoice.eml
+    expect:
+      - ruleId: return-paypal
+        event: refund_issued
+        orderNumbers: ["712345678901234567"]
+        total: { amount: 13.99, currency: EUR }
+        shop: www.example-games.com
+        return: { status: refunded, refund: { amount: 13.99, currency: EUR } }
+  - fixture: paypal-refund-on-the-way.eml
+    expect:
+      - ruleId: return-paypal
+        event: refund_issued
+        orderNumbers: []
+        total: { amount: 18.2, currency: EUR }
+        shop: Example Market
+        return: { status: refunded, refund: { amount: 4.62, currency: EUR } }

@@ -12,8 +12,16 @@ event_keywords:
   - event: order_cancelled
     patterns: ["storniert|cancell?ed"]
     in: [subject]
+  # "wurde zugestellt", "wurde an eine Packstation geliefert", "wurde in eine Filiale geliefert";
+  # "wird voraussichtlich heute geliefert" is still on its way.
+  - event: order_delivered
+    patterns:
+      [
+        "wurde (?:an eine packstation |in eine filiale |an einen paketshop )?(?:zugestellt|geliefert)|was delivered",
+      ]
+    in: [subject]
   - event: order_shipped
-    patterns: ["versandt|versendet|shipped"]
+    patterns: ["versandt|versendet|shipped|voraussichtlich heute"]
     in: [subject]
   - event: order_confirmed
     patterns: ["eingangsbestätigung|bestellbestätigung|bestellung|order confirmation"]
@@ -26,3 +34,13 @@ tests:
         kind: order
         event: order_confirmed
         orderNumbers: ["1234567"]
+  - fixture: berrybase-delivered.eml
+    expect:
+      - ruleId: order-berrybase
+        event: order_delivered
+        orderNumbers: ["1234568"]
+  - fixture: berrybase-arriving-today.eml
+    expect:
+      - ruleId: order-berrybase
+        event: order_shipped
+        orderNumbers: ["1234568"]

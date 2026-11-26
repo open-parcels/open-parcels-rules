@@ -40,6 +40,7 @@ extract:
   arrival:         [{ pattern: '(?<arrival>(?:zustellung|arriving)[^\n]{0,80})' }]
   carrier:         [{ pattern: 'versand mit (?<carrier>DHL|Hermes)' }]
   total:           [{ pattern: 'gesamtsumme:\s*(?<total>\d[\d.,]*\s?(?:€|EUR))' }]
+  shop:            [{ pattern: 'refund from (?<shop>[^\n]+)$', in: [subject] }]
 status_keywords:                  # first group with a matching pattern wins
   - { status: delivered, patterns: ['wurde zugestellt'] }
 event_keywords:                   # order, return and dunning events
@@ -67,6 +68,9 @@ tests:
   neither, the rule's `currency` is used, and without one there is no total. The last `.` or
   `,` followed by one or two digits is the decimal point, every other separator groups
   thousands. Capture the total, not a subtotal or an item price.
+- `shop` is the shop or seller the email names as the one paid, in its own words. Payment
+  services' refund emails (`return-paypal`) often name no order number; the payee and the
+  purchase's `total` let a consumer find the order.
 - Events: `order_placed`, `order_confirmed`, `order_shipped`, `order_delivered` (the shop
   says the order arrived, without a tracking number), `order_cancelled`,
   `return_started`, `return_received`, `refund_issued`, `return_rejected`,
@@ -86,12 +90,37 @@ For the few things a regex cannot express, a rule may name code in
 
 Add another only when data cannot do the job, and document it here.
 
+## Return details
+
+Every `return` result carries `return`: what the email says about the return beyond the rule's
+fields, read from labelled lines in English and German by
+[`src/mail/returns.ts`](../src/mail/returns.ts), so no rule spells them out:
+
+- `status`: how far the return is (`requested`, `label_created`, `dropped_off`, `in_transit`,
+  `received`, `refunded`, `rejected`, `cancelled`), from the wording ("was dropped off", "is
+  in transit", "return label") or else the rule's event;
+- `returnId` (the shop's own id: `rmaId=` in a link, "Return ID:", "Rücksendenummer:"), `reason`;
+- `returnBy`: the last day to hand it in ("Drop off by:", "Rückgabe bis:"), a local
+  `YYYY-MM-DD` in the email's time zone (needs the email's date);
+- `dropOff`: where it may be handed in, each `{ carrier?, kind, description }` with `kind`
+  `shop`, `parcel_locker`, `post_office`, `pickup` or `any`;
+- `cost` (`{ free }`, or `{ free, amount, currency }`), `refund` (money back), `labelUrl`;
+- `aboutReturn`: the email speaks of a return, not only of money back for a cancelled order.
+
+A return result whose rule finds no item takes the items from "Item: …" lines, else from a
+subject such as "Your return of …".
+
 ## Beyond the rules
 
 - **schema.org**: `ParcelDelivery` in JSON-LD (`<script type="application/ld+json">`) or
   microdata gives an extra result with `ruleId: "schema.org"`. Emails without the word
   `ParcelDelivery` cost nothing.
-- **Fallback**: when no rule and no markup applies, an email from a known sender (a carrier
+- **Return emails of other shops**: when no rule and no markup applies, an email whose subject
+  speaks of a return or refund ("Return requested for order #1042", "Rückerstattung zu Ihrer
+  Bestellung 12345") and names the order there gives a `return` result with
+  `ruleId: "generic-return"` (exported as `GENERIC_RETURN_RULE`), its event read from the
+  subject, from any sender: its order is the sender's. The `ignore` rules still apply.
+- **Fallback**: when no rule, no markup and no return wording applies, an email from a known sender (a carrier
   domain in `carriers.yaml`, or a domain a non-`ignore` email rule reads) is scanned for tracking
   numbers; numbers with a confidence of at least 0.6 give a result with `ruleId: "fallback"`.
   Email from any other sender gives nothing.
