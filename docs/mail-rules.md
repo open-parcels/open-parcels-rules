@@ -4,6 +4,17 @@ One YAML file per rule in `data/mail/`, named after its `id` (`<kind>-<sender>`)
 match several rules (an Amazon shipping email yields a `parcel` and an `order` result); results
 come in rule-id order.
 
+## Rules that live in a provider
+
+The rules of a shop or carrier that has its own provider move into that provider (Amazon, DHL
+and Hermes so far, in the open-parcels server). A provider ships its rules in this same format
+and reads the emails routed to it with `withEmailRules(rules, definitions)`: these rules with the
+provider's rules in place of the shared ones. The shared `ignore` rules still apply; schema.org
+markup and the format-detection fallback work as before, since carriers and formats stay here.
+What stays in `data/mail/` are the rules of shops and carriers without a provider, the `ignore`
+rules and rules for senders that relay for many shops (marketplace relays, `allegromail.pl`).
+The example below is an older version of `parcel-dhl`, kept here for its shape.
+
 ```yaml
 id: parcel-dhl
 name: DHL parcel notifications

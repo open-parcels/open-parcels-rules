@@ -37,7 +37,7 @@ loader in [`python/`](python/) proves that.
 | [`vendor/tracking_number_data/`](vendor/tracking_number_data/) | Pinned, unmodified copy of the community tracking_number_data courier files (MIT, see its `LICENSE` and `VERSION`) |
 | [`data/status/`](data/status/) | Status tables per carrier, with test vectors |
 | [`data/locales/`](data/locales/) | Delivery-date words and phrases per language, with test vectors |
-| [`data/mail/`](data/mail/) | One YAML file per email rule, each tested against made-up `.eml` fixtures in [`test/fixtures/mail/`](test/fixtures/mail/) |
+| [`data/mail/`](data/mail/) | One YAML file per email rule, each tested against made-up `.eml` fixtures in [`test/fixtures/mail/`](test/fixtures/mail/). Shops and carriers with their own provider keep their rules there instead ([`docs/mail-rules.md`](docs/mail-rules.md)) |
 | [`schema/`](schema/) | JSON Schema (2020-12) for every data file type, generated from the TypeScript schemas |
 | [`src/`](src/) | The TypeScript engine |
 | [`python/`](python/) | Python reference loader and vector runner |
