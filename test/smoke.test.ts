@@ -25,6 +25,7 @@ interface Api {
   ) => { status: string };
   parseArrival: (rules: unknown, text: string, options: object) => { from: string } | null;
   parseEmail: (rules: unknown, mail: object) => { ruleId: string }[];
+  withEmailRules: (rules: unknown, definitions: readonly object[]) => unknown;
   ignoredStatus: (rules: unknown, carrier: string, raw: object) => string | null;
   findCarrierKey: (rules: unknown, carrier: string, name: string) => { value: string } | undefined;
   carrierKeys: (rules: unknown, carrier: string) => unknown[];
@@ -60,7 +61,18 @@ describe("built package", () => {
       subject: "Ihr DHL Paket kommt heute",
       text: "Sendungsnummer: 00340434123456789012",
     };
-    expect(m.parseEmail(rules, mail).length).toBeGreaterThan(0);
+    const own = m.withEmailRules(rules, [
+      {
+        id: "parcel-example",
+        name: "Example",
+        kind: "parcel",
+        senders: { domains: ["dhl.de"] },
+        carrier: "dhl",
+        extract: { tracking_number: [{ pattern: "(?<tracking_number>\\d{20})" }] },
+        tests: [{ fixture: "example.eml", expect: [] }],
+      },
+    ]);
+    expect(m.parseEmail(own, mail)[0]?.ruleId).toBe("parcel-example");
     expect(m.ignoredStatus(rules, "amazon", { text: "Storniert" })).toBe("order_cancelled");
     expect(m.findCarrierKey(rules, "evri", "website_key")?.value).not.toBe("");
     expect(m.carrierKeys(rules, "amazon").length).toBeGreaterThan(1);

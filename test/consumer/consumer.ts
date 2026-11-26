@@ -9,11 +9,13 @@ import {
   parseEmail,
   resolveStatus,
   trackingUrl,
+  withEmailRules,
 } from "../../dist/index.js";
 import type {
   ArrivalWindow,
   CarrierInfo,
   EmailParseResult,
+  EmailRuleDefinition,
   ParcelStatus,
   Rules,
   TrackingCandidate,
@@ -31,5 +33,13 @@ const window: ArrivalWindow | null = parseArrival(rules, "heute", {
   timeZone: "UTC",
 });
 const mails: EmailParseResult[] = parseEmail(rules, { from: "a@b.c", subject: "s" });
+const rule: EmailRuleDefinition = {
+  id: "parcel-example",
+  name: "Example",
+  kind: "parcel",
+  senders: { domains: ["example.com"] },
+  tests: [{ fixture: "example.eml", expect: [] }],
+};
+const own: Rules = withEmailRules(rules, [rule]);
 
-export const used = [all, dhl, url, found, status, resolved, window, mails];
+export const used = [all, dhl, url, found, status, resolved, window, mails, own];

@@ -22,7 +22,9 @@ import type {
 } from "./types.ts";
 
 export { loadRules } from "./load.ts";
-export { rulesFromBundle } from "./rules.ts";
+export { rulesFromBundle, withEmailRules } from "./rules.ts";
+/** An email rule as a provider ships it: the format of `schema/mail-rule.schema.json`. */
+export type { MailRuleInput as EmailRuleDefinition } from "./schema/mail.ts";
 export { portabilityProblems } from "./portability.ts";
 export { PARCEL_STATUSES } from "./schema/common.ts";
 export { parseMoney } from "./mail/money.ts";

@@ -58,6 +58,7 @@ import type { Rules, ParcelStatus, CarrierInfo, TrackingCandidate } from "open-p
 | `parseArrival(rules, text, { now, timeZone, locales? })` | `{ from, to, allDay, matched }` or `null`. |
 | `parseEmail(rules, mail)` | An array of `EmailParseResult`. |
 | `parseMoney(text, currency?)` | `{ amount, currency }` from a money text such as `€ 11,47` or `99.90EUR`, or `undefined`. |
+| `withEmailRules(rules, definitions)` | `rules` with a provider's own email rules (`EmailRuleDefinition`, the format of `schema/mail-rule.schema.json`) in place of the shared ones; the shared `ignore` rules stay. Throws on an invalid definition. See [`mail-rules.md`](mail-rules.md). |
 
 Additions to the contract: `rulesFromBundle`, `portabilityProblems(pattern)` (the regex-subset
 check, for tools that edit data), `PARCEL_STATUSES`, the `types` field on tracking

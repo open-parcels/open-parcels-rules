@@ -6,6 +6,7 @@ import type { CompiledMailRule } from "./mail/compile.ts";
 import { compileMailRule } from "./mail/compile.ts";
 import type { Bundle } from "./schema/bundle.ts";
 import { bundleSchema } from "./schema/bundle.ts";
+import { mailRuleSchema } from "./schema/mail.ts";
 import type { CompiledStatusTable } from "./status.ts";
 import type { CarrierKey } from "./types.ts";
 import { compileStatusTable } from "./status.ts";
@@ -64,6 +65,36 @@ export function compileBundle(bundle: Bundle): Rules {
         },
       ]),
     ),
+  };
+}
+
+/**
+ * These rules with a provider's own email rules in place of the shared ones, for reading an email
+ * that was routed to that provider. The shared `ignore` rules stay (account and newsletter emails
+ * never describe a parcel, whoever reads them); every other shared email rule is left out, so the
+ * email is read by the provider's rules alone. Carriers, formats, status tables and locales are
+ * shared, so schema.org markup and the format-detection fallback read it as they always did.
+ * Each definition is validated against the email rule schema; an invalid one throws.
+ */
+export function withEmailRules(rules: Rules, definitions: readonly unknown[]): Rules {
+  const own = definitions.map((definition, index) => {
+    const parsed = mailRuleSchema.safeParse(definition);
+    if (!parsed.success) {
+      throw new Error(
+        `Email rule ${String(index)} does not match its schema:\n${JSON.stringify(parsed.error.issues, null, 2)}`,
+      );
+    }
+    return compileMailRule(parsed.data);
+  });
+  const ids = own.map((rule) => rule.id);
+  if (new Set(ids).size !== ids.length) throw new Error("Email rule ids must be unique.");
+  return {
+    ...rules,
+    // In id order, as the bundle lists the shared rules (by file name, which is the id).
+    mailRules: [
+      ...rules.mailRules.filter((rule) => rule.kind === "ignore"),
+      ...own.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
+    ],
   };
 }
 

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROOT } from "../scripts/collect.ts";
-import { parseEmail } from "../src/index.ts";
+import { parseEmail, withEmailRules, type EmailRuleDefinition } from "../src/index.ts";
 import { isBoilerplateItem, isPlaceholder } from "../src/mail/context.ts";
 import { EXTRACTORS } from "../src/mail/extractors.ts";
 import { decodeEntities, htmlToText } from "../src/mail/html.ts";
@@ -14,6 +14,20 @@ import { testData, testRules } from "./helpers/rules.ts";
 
 const rules = testRules();
 const FIXTURES = join(ROOT, "test", "fixtures", "mail");
+
+/** A made-up rule as a provider ships it (shop and carrier rules live in their providers). */
+const providerRule: EmailRuleDefinition = {
+  id: "parcel-example",
+  name: "Example carrier notifications",
+  kind: "parcel",
+  senders: { domains: ["dhl.de"] },
+  carrier: "dhl",
+  extract: {
+    tracking_number: [{ pattern: "Sendungsnummer:\\s*(?<tracking_number>\\d{20})" }],
+    arrival: [{ pattern: "(?<arrival>Zustellung heute[^\\n]{0,60})", in: ["text"] }],
+  },
+  tests: [{ fixture: "example.eml", expect: [] }],
+};
 
 function fixture(name: string, timeZone?: string, now?: string): EmailInput {
   const mail = parseEml(readFileSync(join(FIXTURES, name), "utf8"), timeZone);
@@ -39,20 +53,19 @@ describe("mail rule vectors", () => {
 describe("mail rule data", () => {
   const data = testData().mail;
 
-  it("converts every old rule", () => {
+  it("converts every old rule that no provider took over", () => {
     const ids = data.map((rule) => rule.id);
+    // Amazon, DHL and Hermes rules moved into those providers (open-parcels server).
     const old = [
-      ...["aliexpress", "amazon", "auspost", "berrybase", "capost", "dhl", "dpd-pl", "ebay"].map(
+      ...["aliexpress", "auspost", "berrybase", "capost", "dpd-pl", "ebay"].map(
         (name) => `parcel-${name}`,
       ),
-      ...["fedex", "gls", "hermes", "inpost", "jlcpcb", "poczta-polska", "royalmail", "ups"].map(
+      ...["fedex", "gls", "inpost", "jlcpcb", "poczta-polska", "royalmail", "ups"].map(
         (name) => `parcel-${name}`,
       ),
       "parcel-usps",
-      ...["amazon", "berrybase", "ebay", "jlcpcb", "shopify"].map((name) => `order-${name}`),
-      "return-amazon",
+      ...["berrybase", "ebay", "jlcpcb", "shopify"].map((name) => `order-${name}`),
       "return-paypal",
-      "dunning-amazon",
     ];
     expect(ids).toEqual(expect.arrayContaining(old));
   });
@@ -216,13 +229,57 @@ describe("parseEmail beyond the rules", () => {
   });
 
   it("returns no arrival without a mail date to anchor relative days", () => {
-    const results = parseEmail(rules, {
+    const results = parseEmail(withEmailRules(rules, [providerRule]), {
       from: "noreply@dhl.de",
       subject: "Ihr DHL Paket kommt heute",
       text: "Sendungsnummer: 00340434123456789012\nZustellung heute zwischen 14:00 und 18:00 Uhr",
     });
     expect(results[0]?.arrival).toBeUndefined();
     expect(results[0]?.trackingNumbers).toEqual(["00340434123456789012"]);
+  });
+});
+
+describe("a provider's own email rules (withEmailRules)", () => {
+  const own = withEmailRules(rules, [providerRule]);
+
+  it("reads with the provider's rules", () => {
+    expect(
+      parseEmail(own, {
+        from: "noreply@dhl.de",
+        subject: "Ihr Paket kommt",
+        text: "Sendungsnummer: 00340434123456789012",
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        ruleId: "parcel-example",
+        carrier: "dhl",
+        trackingNumbers: ["00340434123456789012"],
+      }),
+    ]);
+  });
+
+  it("keeps the shared ignore rules and drops the other shared rules", () => {
+    expect(own.mailRules.map((rule) => rule.id)).toEqual([
+      ...rules.mailRules.filter((rule) => rule.kind === "ignore").map((rule) => rule.id),
+      "parcel-example",
+    ]);
+    expect(
+      parseEmail(own, {
+        from: "noreply@dhl.de",
+        subject: "Newsletter",
+        text: "Sendungsnummer: 00340434123456789012",
+      }),
+    ).toEqual([]);
+  });
+
+  it("leaves the shared rules as they are", () => {
+    expect(rules.mailRules.some((rule) => rule.id === "parcel-example")).toBe(false);
+    expect(own.carriers).toBe(rules.carriers);
+  });
+
+  it("refuses a rule that does not match the schema, and two rules with one id", () => {
+    expect(() => withEmailRules(rules, [{ ...providerRule, kind: "parcels" }])).toThrow(/schema/u);
+    expect(() => withEmailRules(rules, [providerRule, providerRule])).toThrow(/unique/u);
   });
 });
 
