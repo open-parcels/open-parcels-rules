@@ -55,15 +55,11 @@ describe("mail rule data", () => {
 
   it("converts every old rule that no provider took over", () => {
     const ids = data.map((rule) => rule.id);
-    // Amazon, DHL and Hermes rules moved into those providers (open-parcels server).
+    // The rules of Amazon, DHL, Hermes, DPD Germany, UPS, FedEx, USPS, Evri and Canada Post moved
+    // into those providers (open-parcels server).
     const old = [
-      ...["aliexpress", "auspost", "berrybase", "capost", "dpd-pl", "ebay"].map(
-        (name) => `parcel-${name}`,
-      ),
-      ...["fedex", "gls", "inpost", "jlcpcb", "poczta-polska", "royalmail", "ups"].map(
-        (name) => `parcel-${name}`,
-      ),
-      "parcel-usps",
+      ...["aliexpress", "auspost", "berrybase", "dpd-pl", "ebay"].map((name) => `parcel-${name}`),
+      ...["gls", "inpost", "jlcpcb", "poczta-polska", "royalmail"].map((name) => `parcel-${name}`),
       ...["berrybase", "ebay", "jlcpcb", "shopify"].map((name) => `order-${name}`),
       "return-paypal",
     ];

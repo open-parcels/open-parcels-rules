@@ -6,8 +6,8 @@ come in rule-id order.
 
 ## Rules that live in a provider
 
-The rules of a shop or carrier that has its own provider move into that provider (Amazon, DHL
-and Hermes so far, in the open-parcels server). A provider ships its rules in this same format
+The rules of a shop or carrier that has its own provider move into that provider (Amazon, DHL,
+Hermes, DPD Germany, UPS, FedEx, USPS, Evri and Canada Post so far, in the open-parcels server). A provider ships its rules in this same format
 and reads the emails routed to it with `withEmailRules(rules, definitions)`: these rules with the
 provider's rules in place of the shared ones. The shared `ignore` rules still apply; schema.org
 markup and the format-detection fallback work as before, since carriers and formats stay here.
